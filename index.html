@@ -64,9 +64,18 @@ Coded by www.creative-tim.com
     gtag('config', 'G-QV1PHRXGH3');
   </script>
   <script src="https://code.iconify.design/2/2.0.3/iconify.min.js"></script>
+  <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
   <script>
-    console.log(LISTID);
-  </script>
+      // SDK를 초기화 합니다. 사용할 앱의 JavaScript 키를 설정해 주세요.
+      Kakao.init('e01a39c601475ad96b007a1af73ea6a9');
+
+      // SDK 초기화 여부를 판단합니다.
+      console.log(Kakao.isInitialized());
+
+      function addSubscribe(){Kakao.Channel.addChannel({
+  channelPublicId: '_ZveLs'
+})}
+  </script> 
 </head>
 
 <body style="font-family:Pretendard" ; class=" index-page">
@@ -180,11 +189,16 @@ Coded by www.creative-tim.com
             </a>
           </li> -->
           <li class="nav-item">
-            <a class="nav-link nav-link-icon" href="https://pf.kakao.com/_ZveLs" target="_blank" data-toggle="tooltip"
+            <!-- <a class="nav-link nav-link-icon" href="https://pf.kakao.com/_ZveLs" target="_blank" data-toggle="tooltip"
               title="KakaoTalk Channel">
               <img style="opacity: 0.5;" height="30px" src="./assets/img/icons/kakaotalk/kakao_ch.svg" alt="">
               <span class="nav-link-inner--text d-lg-none">Kakaotalk</span>
-            </a>
+            </a> -->
+            <button style="background-color: transparent; border:none;" class="nav-link nav-link-icon" href="https://pf.kakao.com/_ZveLs" target="_blank" data-toggle="tooltip"
+            title="KakaoTalk Channel" onclick="addSubscribe()">
+            <img style="opacity: 0.5;" height="30px" src="./assets/img/icons/kakaotalk/kakao_ch.svg" alt="">
+            <span class="nav-link-inner--text d-lg-none">Kakaotalk</span>
+          </button>
           </li>
           <!-- <li class="nav-item">
             <a class="btn btn-outline-primary" href="https://www.creative-tim.com/builder/argon" target="_blank">
@@ -446,6 +460,7 @@ Coded by www.creative-tim.com
         application: "argon-design-system-pro"
       });
   </script>
+
 </body>
 
 </html>
