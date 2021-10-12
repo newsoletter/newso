@@ -1,6 +1,1 @@
-User-agent: Yeti
-Allow:/
-User-agent: *
-Allow:/
-
-Sitemap:http://www.simpledent.co.kr/sitemap.xml
+Sitemap: http://0.0.0.0:4000/sitemap.xml
