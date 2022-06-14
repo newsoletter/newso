@@ -4,14 +4,10 @@
 name: Node.js CI
 
 on:
-  push:
-    branches: [ "designed-page" ]
-  pull_request:
-    branches: [ "designed-page" ]
-
+  schedule:
+    - cron: "0 13 * * TUE"
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -20,41 +16,22 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run crawl
-    - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
-      with:
-        # The name of the user that will be displayed as the author of the commit.
-        # Default: depends on the default_author input
-        author_name: 'Newso'
-
-        # The email of the user that will be displayed as the author of the commit.
-        # Default: depends on the default_author input
-        author_email: 'official@antller.com'
-
-        # The name of the custom committer you want to use, if different from the author of the commit.
-        # Default: the name of the author (set with either author_name or default_author)
-        committer_name: 'Newso'
-
-        # The email of the custom committer you want to use, if different from the author of the commit.
-        # Default: the email of the author (set with either author_email or default_author)
-        committer_email: 'official@antller.com'
-
-        # The message for the commit.
-        # Default: 'Commit from GitHub Actions (name of the workflow)'
-        message: github action crawl commit ${{ github.event.repository.updated_at}}
-
-        # If this input is set, the action will push the commit to a new branch with this name.
-        # Default: ''
-        new_branch: 'gh-pages'
-
-
-
-    
-    
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm ci
+      - run: npm run crawl
+      - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
+        with:
+          author_name: "Newso"
+          author_email: "official@antller.com"
+          committer_name: "Newso"
+          committer_email: "official@antller.com"
+          # Default: 'Commit from GitHub Actions (name of the workflow)'
+          message: github action crawling article commit ${{ github.event.repository.updated_at}}
+          # If this input is set, the action will push the commit to a new branch with this name.
+          # Default: ''
+          # new_branch: 'gh-pages'

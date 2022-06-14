@@ -5,9 +5,9 @@
 layout: default
 title: 뉴소레터
 custom_css:
-- styles
+  - styles
 custom_js:
-- app
+  - app
 ---
 
 <main>
@@ -16,21 +16,26 @@ custom_js:
     <div class="content-wrraper flex subscription-content">
       {% include subscription.html %}
       <div class="subscription-img">
-        <img src="{{ site.baseurl }}/assets/images/subscription/img-main.png" alt="" />
+        <img
+          src="{{ site.baseurl }}/assets/images/subscription/img-main.png"
+          alt=""
+        />
       </div>
     </div>
   </section>
 
   <!-- 소개글 서문 -->
   <section class="newso-description-preface flex-row">
-    <div class="
-        content-wrraper
-        newso-description-preface-content
-        flex-space-between
-      ">
+    <div
+      class="content-wrraper newso-description-preface-content flex-space-between"
+    >
       <div class="preface-first-content flex-col">
         <div class="preface-logo">
-          <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/preface-newso-logo/img-newso-2@2x.png" alt="newso-logo" />
+          <img
+            class="full-size-fit"
+            src="{{ site.baseurl }}/assets/images/preface-newso-logo/img-newso-2@2x.png"
+            alt="newso-logo"
+          />
         </div>
         <div class="preface-line"></div>
         <div class="preface-keywords">
@@ -58,25 +63,41 @@ custom_js:
         <ul class="preface-introduction-icons flex-row">
           <li class="preface-introduction-icon-container flex-col flex-center">
             <div class="preface-introduction-icon">
-              <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-01@2x.png" alt="한우 가격 동향" />
+              <img
+                class="full-size-fit"
+                src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-01@2x.png"
+                alt="한우 가격 동향"
+              />
             </div>
             <div class="preface-introduction-icon-name">한우가격 동향</div>
           </li>
           <li class="preface-introduction-icon-container flex-col flex-center">
             <div class="preface-introduction-icon">
-              <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-hot@2x.png" alt="핫이슈 탐구" />
+              <img
+                class="full-size-fit"
+                src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-hot@2x.png"
+                alt="핫이슈 탐구"
+              />
             </div>
             <div class="preface-introduction-icon-name">핫이슈 탐구</div>
           </li>
           <li class="preface-introduction-icon-container flex-col flex-center">
             <div class="preface-introduction-icon">
-              <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-03@2x.png" alt="질병과 지원사업" />
+              <img
+                class="full-size-fit"
+                src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-03@2x.png"
+                alt="질병과 지원사업"
+              />
             </div>
             <div class="preface-introduction-icon-name">질병 & 지원사업</div>
           </li>
           <li class="preface-introduction-icon-container flex-col flex-center">
             <div class="preface-introduction-icon">
-              <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-04@2x.png" alt="사양관리 팁" />
+              <img
+                class="full-size-fit"
+                src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-04@2x.png"
+                alt="사양관리 팁"
+              />
             </div>
             <div class="preface-introduction-icon-name">사양관리 팁</div>
           </li>
@@ -92,7 +113,11 @@ custom_js:
       <div class="description-content-wrapper flex-col justify-center">
         <div class="description-name-container flex-row flex-center">
           <div class="description-icon">
-            <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-01@2x.png" alt="한우가격 동향" />
+            <img
+              class="full-size-fit"
+              src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-01@2x.png"
+              alt="한우가격 동향"
+            />
           </div>
           <div class="description-name">한우가격 동향</div>
         </div>
@@ -104,10 +129,18 @@ custom_js:
         <div class="">
           <div class="flex-row flex-space-between graph-img">
             <div class="graph-img-container">
-              <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/graph/graph1.png" alt="한우 가격 그래프" />
+              <img
+                class="full-size-fit"
+                src="{{ site.baseurl }}/assets/images/graph/graph1.png"
+                alt="한우 가격 그래프"
+              />
             </div>
             <div class="graph-img-container">
-              <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/graph/graph2.png" alt="한우 가격 그래프" />
+              <img
+                class="full-size-fit"
+                src="{{ site.baseurl }}/assets/images/graph/graph2.png"
+                alt="한우 가격 그래프"
+              />
             </div>
           </div>
           <div hidden class="description-text">
@@ -115,8 +148,10 @@ custom_js:
               이번주(34주차) 6~7개월령 송아지 평균 가격은 수송아지 약 473만 원,
               암송아지 약 375만 원, 지육 평균 가격은 21,058원/kg 이에요.
             </p>
-            지난주(33주차) 평균가에 비해<span class="newso-blue-text">수송아지 ▼30,000,</span><span class="newso-red-text">암송아지
-              ▲40,000,</span><span class="newso-blue-text">지육 ▼42원</span>이 되었어요.
+            지난주(33주차) 평균가에 비해<span class="newso-blue-text"
+              >수송아지 ▼30,000,</span
+            ><span class="newso-red-text">암송아지 ▲40,000,</span
+            ><span class="newso-blue-text">지육 ▼42원</span>이 되었어요.
           </div>
         </div>
       </div>
@@ -127,7 +162,11 @@ custom_js:
       <div class="description-content-wrapper flex-col justify-center">
         <div class="description-name-container flex-row flex-center">
           <div class="description-icon">
-            <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-hot@2x.png" alt="핫이슈 탐구" />
+            <img
+              class="full-size-fit"
+              src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-hot@2x.png"
+              alt="핫이슈 탐구"
+            />
           </div>
           <div class="description-name">핫이슈 탐구</div>
         </div>
@@ -165,7 +204,10 @@ custom_js:
             </div>
           </div>
           <div class="issue-img">
-            <img src="{{ site.baseurl }}/assets/images/jonnie/img-jonnie-02@2x.png" alt="쪼니" />
+            <img
+              src="{{ site.baseurl }}/assets/images/jonnie/img-jonnie-02@2x.png"
+              alt="쪼니"
+            />
           </div>
         </div>
       </div>
@@ -176,7 +218,11 @@ custom_js:
       <div class="description-content-wrapper flex-col justify-center">
         <div class="description-name-container flex-row flex-center">
           <div class="description-icon">
-            <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-03@2x.png" alt="가축 질병발생" />
+            <img
+              class="full-size-fit"
+              src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-03@2x.png"
+              alt="가축 질병발생"
+            />
           </div>
           <div class="description-name">
             <div>가축질병발생현황&nbsp</div>
@@ -196,7 +242,11 @@ custom_js:
             <div class="disease-support-name-container flex-col">
               <div class="disease-support-name">질병발생현황</div>
               <div class="disease-support-img flex-row justify-center">
-                <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/disease-symbol/img-301@2x.png" alt="질병 발생 현황" />
+                <img
+                  class="full-size-fit"
+                  src="{{ site.baseurl }}/assets/images/disease-symbol/img-301@2x.png"
+                  alt="질병 발생 현황"
+                />
               </div>
             </div>
           </li>
@@ -207,7 +257,11 @@ custom_js:
             <div class="disease-support-name-container flex-col">
               <div class="disease-support-name">보조금 정보</div>
               <div class="disease-support-img flex-row justify-center">
-                <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/disease-symbol/img-302@2x.png" alt="보조금 정보" />
+                <img
+                  class="full-size-fit"
+                  src="{{ site.baseurl }}/assets/images/disease-symbol/img-302@2x.png"
+                  alt="보조금 정보"
+                />
               </div>
             </div>
           </li>
@@ -218,7 +272,11 @@ custom_js:
             <div class="disease-support-name-container flex-col">
               <div class="disease-support-name">지원사업</div>
               <div class="disease-support-img flex-row justify-center">
-                <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/disease-symbol/img-303@2x.png" alt="지원사업" />
+                <img
+                  class="full-size-fit"
+                  src="{{ site.baseurl }}/assets/images/disease-symbol/img-303@2x.png"
+                  alt="지원사업"
+                />
               </div>
             </div>
           </li>
@@ -231,7 +289,11 @@ custom_js:
       <div class="description-content-wrapper flex-col justify-center">
         <div class="description-name-container flex-row flex-center">
           <div class="description-icon">
-            <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-04@2x.png" alt="" />
+            <img
+              class="full-size-fit"
+              src="{{ site.baseurl }}/assets/images/icon/description-icon/icon-bn-04@2x.png"
+              alt=""
+            />
           </div>
           <div class="description-name">사양관리 인사이트</div>
         </div>
@@ -262,7 +324,10 @@ custom_js:
             </div>
           </div>
           <div class="insight-img">
-            <img src="{{ site.baseurl }}/assets/images/jonnie/img-jonnie-04@2x.png" alt="쪼니" />
+            <img
+              src="{{ site.baseurl }}/assets/images/jonnie/img-jonnie-04@2x.png"
+              alt="쪼니"
+            />
           </div>
         </div>
       </div>
@@ -273,7 +338,11 @@ custom_js:
     <section class="flex-row newso-description-appendix newso-description">
       <div class="description-content-wrapper flex-row justify-center">
         <div class="description-special-logo">
-          <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/newso-yellow-symbol/img-newso-3@2x.png" alt="부록" />
+          <img
+            class="full-size-fit"
+            src="{{ site.baseurl }}/assets/images/newso-yellow-symbol/img-newso-3@2x.png"
+            alt="부록"
+          />
         </div>
         <div class="description-special-text flex-col">
           <div class="description-name-container flex-row flex-center">
@@ -285,7 +354,11 @@ custom_js:
           </div>
         </div>
         <div class="description-special-img">
-          <img class="full-size-fit" src="{{ site.baseurl }}/assets/images/jonnie/img-special@2x.png" alt="부록-쪼니" />
+          <img
+            class="full-size-fit"
+            src="{{ site.baseurl }}/assets/images/jonnie/img-special@2x.png"
+            alt="부록-쪼니"
+          />
         </div>
       </div>
     </section>
@@ -313,7 +386,7 @@ custom_js:
 
         <ul class="btn-list flex-row">
           <li class="btn-list-li">
-            <a href="https://page.stibee.com/archives/137513" target="_blank" rel="noreferrer">
+            <a href="{{ site.baseurl }}/article/" rel="noreferrer">
               <button class="inducement-btn btn-latest-news">
                 지난 뉴소레터 보기
               </button>
