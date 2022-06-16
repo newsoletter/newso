@@ -1,8 +1,7 @@
-const {saveRecentArticle} = require('./getArticle')
+const { saveRecentArticle, saveAllArticle } = require("./getArticle");
 
-
-function main(){
-    saveRecentArticle()
+function main() {
+  saveRecentArticle();
 }
 
-main()
+main();
