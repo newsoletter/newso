@@ -2,6 +2,10 @@
 // article
 .public-email {
   margin-top: 8rem;
+
+  ul {
+    list-style: disc;
+  }
 }
 
 .subscription {
@@ -375,11 +379,8 @@
   }
 }
 
-@media screen and (max-width: 700px) {
-  .public-email {
-    margin-top: 3rem;
-  }
-  // 설명부분 43.75
+@media screen and (max-width: 730px) {
+  // 설명부분 43.75dd
   .description-content-wrapper {
     padding: 0 28px;
   }
@@ -474,6 +475,9 @@
   }
 }
 @media screen and (max-width: 550px) {
+  .public-email {
+    margin-top: 3rem;
+  }
   //34.375rem
   .subscription {
     padding-top: 9.9rem;

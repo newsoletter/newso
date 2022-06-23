@@ -20,11 +20,13 @@
   width: 100%;
   height: 100%;
 }
+
 .navigation-menu-item {
   margin: 0 3em 0 0;
   height: 4rem;
   letter-spacing: -0.67px;
   color: $--newso-text-color-ivory;
+  white-space: nowrap;
   @include normal-text;
   transition: 0.3s;
 }
@@ -33,6 +35,7 @@
 }
 
 .subscribe-btn {
+  white-space: nowrap;
   @include navigation-btn(
     $--newso-background-color-ivory,
     $--newso-main-color-green
@@ -40,6 +43,7 @@
 }
 
 .subscribe-kakao-btn {
+  white-space: nowrap;
   @include navigation-btn(
     $--newso-background-color-ivory,
     $--newso-kakao-text-color
@@ -79,7 +83,10 @@
   }
 }
 
-@media screen and (max-width: 830px) {
+@media screen and (max-width: 871px) {
+  .navigation-menu-item {
+    margin: 0 2em 0 0;
+  }
   .nav-wrraper {
     font-size: 1.3rem;
   }
