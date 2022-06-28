@@ -39,7 +39,6 @@ function css() {
         level: { 1: { specialComments: 0 }, 2: { removeDuplicateRules: true } },
       })
     )
-
     .pipe(dest(paths.css.dest, { sourcemaps: true }));
 }
 
