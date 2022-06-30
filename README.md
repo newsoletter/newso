@@ -1,5 +1,9 @@
 # Newo Letter
 
+<p align="center">
+  <img width="500" height="677.37" src="/assets/images/subscription/img-main@3x.png">
+</p>
+
 세상 바쁜 당신을 위한 한우 관련 뉴소레터
 
 ## Project run
