@@ -39,6 +39,18 @@ npm run gulp:watch
 yarn gulp:watch
 ```
 
+## 뉴스레터 크롤링
+
+script를 통해 [뉴소레터 아카이브](https://page.stibee.com/archives/137513)에 있는 뉴스레터를 크롤링 할 수 있습니다.
+
+```
+# 최근 기사 하나 다운로드
+npm run crawl
+
+# 모든 기사 다운로드
+npm run crawl-all
+```
+
 ## 개발할 때 실행할 것
 
 ```shell
