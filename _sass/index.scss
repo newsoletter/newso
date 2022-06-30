@@ -329,8 +329,11 @@
 .btn-subscribe:hover {
   background-color: #f1af12;
 }
+
 .btn-latest-news:hover {
-  border: solid 1px rgb(255, 255, 255);
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgb(255, 255, 255);
 }
 
 @media screen and(max-width:1072px) {
