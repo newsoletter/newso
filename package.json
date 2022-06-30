@@ -25,7 +25,8 @@
     "build": "./node_modules/.bin/webpack && npx gulp",
     "webpack": "./node_modules/.bin/webpack",
     "gulp:watch": "npx gulp watch",
-    "crawl": "node ./articleCollector/main.js"
+    "crawl": "node ./articleCollector/main.js",
+    "crawl-all": "node ./articleCollector/saveAllPosts.js"
   },
   "repository": {
     "type": "git",
