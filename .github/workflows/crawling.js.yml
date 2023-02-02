@@ -5,7 +5,7 @@ name: Node.js CI
 
 on:
   schedule:
-    - cron: "0 9 * * THU"
+    - cron: "0 10 * * THU"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
           committer_name: "Newso"
           committer_email: "official@antller.com"
           # Default: 'Commit from GitHub Actions (name of the workflow)'
-          message: github action crawling article commit ${{ github.event.repository.updated_at}}
+          message: github action crawling article commit ${{ github.event.repository.pushed_at}}
           # If this input is set, the action will push the commit to a new branch with this name.
           # Default: ''
           # new_branch: 'gh-pages'
