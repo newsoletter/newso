@@ -10,7 +10,6 @@ ARCHIVE_URL에는 newsoletter 각 포스트 link있음
 */
 const ARCHIVE_URL = "https://page.stibee.com/archives/137513/emails";
 
-
 const getTemplate = (title, sentTime, id) => `---
 layout: default
 type: article
@@ -24,7 +23,6 @@ custom_js:
 ---
 `;
 
-
 async function getArchive() {
   const response = await axios.get(ARCHIVE_URL);
   const archive = response.data;
@@ -32,9 +30,15 @@ async function getArchive() {
 }
 
 async function getHTML(url) {
-  const response = await axios.get(url);
-  const contentHTML = response.data;
-  return contentHTML;
+  try {
+    const response = await axios.get(url,{
+    });
+    const contentHTML = response.data;
+    return contentHTML;
+  } catch (error) {
+    console.log(error);
+    console.log('newso: 아티클을 가져오지 못했습니다.')
+  }
 }
 
 async function getEmailArticleContent(url) {
@@ -63,19 +67,18 @@ exports.saveAllArticle = async function saveAllArticle() {
   const archive = await getHTML(ARCHIVE_URL);
   try {
     await Promise.all(archive.map((article) => saveArticleHTML(article)));
-  }catch(error){
-    console.error("newso: save article error")
+  } catch (error) {
+    console.error("newso: save article error");
   }
-}
+};
 
-exports.saveRecentArticle = async function() {
+exports.saveRecentArticle = async function () {
   const archive = await getHTML(ARCHIVE_URL);
-  const recentArticleInfo = archive[0]
+  const recentArticleInfo = archive[0];
 
   try {
-    saveArticleHTML(recentArticleInfo)
-  }catch(error){
-    console.error("newso: save article error")
+    saveArticleHTML(recentArticleInfo);
+  } catch (error) {
+    console.error("newso: 아티클을 저장하지 못했습니다.");
   }
-}
-
+};
