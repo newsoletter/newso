@@ -13,7 +13,7 @@ const ARCHIVE_URL = "https://page.stibee.com/archives/137513/emails";
 const getTemplate = (title, sentTime, id) => `---
 layout: default
 type: article
-title: ${title}
+title: "${title}"
 sent_time: ${sentTime}
 id: ${id}
 custom_css:
