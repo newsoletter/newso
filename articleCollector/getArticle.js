@@ -57,10 +57,17 @@ async function writeHTML(contentHTML, fileName) {
 
 async function saveArticleHTML(article) {
   const { permanentLink, id, subject, sentTime } = article;
+  const title = removeBackSpace(subject)
   const date = getIsoDateToDate(sentTime);
   const articleContent = await getEmailArticleContent(permanentLink);
-  const template = getTemplate(subject, date, id);
+  const template = getTemplate(title, date, id);
   return writeHTML(template + articleContent, `${date}-${id}`);
+}
+
+function removeBackSpace(str) {
+  const strArr = str.split("");
+  const result = strArr.filter((char) => char !== "\b");
+  return result.join("");
 }
 
 exports.saveAllArticle = async function saveAllArticle() {
