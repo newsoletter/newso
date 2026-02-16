@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Map of Why</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    /* ── Dark Theme ── */
+    [data-theme="dark"] {
+      --bg: #1e1e2e;
+      --surface: #282840;
+      --border: #3b3b5c;
+      --text: #cdd6f4;
+      --text-inverse: #1e1e2e;
+      --accent: #f38ba8;
+      --accent2: #89b4fa;
+      --accent3: #a6e3a1;
+      --muted: #9399b2;
+      --editor-bg: #1e1e30;
+      --node-label: #ffffff;
+      --node-normal-bg: #ffffff;
+      --node-normal-border: #888888;
+      --edge-color: #7f849c;
+      --edge-dim: #3b3b5c;
+      --legend-bg: rgba(40, 40, 64, .92);
+      --graph-bg: #1e1e2e;
+      --logo-filter: brightness(0) invert(1);
+      --watermark-color: rgba(255,255,255,.07);
+    }
+
+    /* ── Light Theme ── */
+    [data-theme="light"] {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: #d4d4d8;
+      --text: #27272a;
+      --text-inverse: #ffffff;
+      --accent: #e11d48;
+      --accent2: #2563eb;
+      --accent3: #16a34a;
+      --muted: #71717a;
+      --editor-bg: #fafafa;
+      --node-label: #1e1e2e;
+      --node-normal-bg: #ffffff;
+      --node-normal-border: #71717a;
+      --edge-color: #a1a1aa;
+      --edge-dim: #e4e4e7;
+      --legend-bg: rgba(255, 255, 255, .92);
+      --graph-bg: #f0f0f4;
+      --logo-filter: none;
+      --watermark-color: rgba(0,0,0,.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      transition: background .25s, color .25s;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: 48px; flex-shrink: 0;
+      transition: background .25s, border-color .25s;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo { height: 26px; width: auto; filter: var(--logo-filter); transition: filter .25s; cursor: pointer; }
+    .topbar-divider { width: 1px; height: 22px; background: var(--border); }
+    .topbar h1 { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: .5px; font-family: 'Poppins', sans-serif; }
+    .topbar .actions { display: flex; gap: 8px; align-items: center; }
+
+    .btn {
+      padding: 6px 14px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface); color: var(--text);
+      font-size: 12px; font-family: inherit; cursor: pointer;
+      transition: all .15s; display: inline-flex; align-items: center; gap: 5px; position: relative;
+    }
+    .btn:hover { background: var(--border); }
+    .btn.primary { background: var(--accent2); color: var(--text-inverse); border-color: var(--accent2); font-weight: 600; }
+    .btn.primary:hover { opacity: .85; }
+    .btn.success { background: var(--accent3); color: #1e1e2e; border-color: var(--accent3); font-weight: 600; }
+    .btn.success:hover { opacity: .85; }
+    .btn.icon-only { padding: 6px 8px; font-size: 16px; }
+    .btn.sm { padding: 3px 8px; font-size: 11px; }
+
+    /* ── Dropdown ── */
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-menu {
+      display: none; position: absolute; top: 100%; right: 0; margin-top: 4px;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35); min-width: 160px; z-index: 100; overflow: hidden;
+    }
+    .dropdown-menu.show { display: block; }
+    .dropdown-item {
+      display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+      font-size: 13px; color: var(--text); cursor: pointer; border: none;
+      background: none; width: 100%; text-align: left; font-family: inherit; transition: background .12s;
+    }
+    .dropdown-item:hover { background: var(--border); }
+
+    /* ── Toggle Switch ── */
+    .toggle-wrap { display: flex; align-items: center; gap: 6px; }
+    .toggle-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+    .toggle-switch {
+      position: relative; width: 36px; height: 20px;
+      background: var(--border); border-radius: 10px; cursor: pointer;
+      transition: background .2s; flex-shrink: 0;
+    }
+    .toggle-switch.on { background: var(--accent3); }
+    .toggle-switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px;
+      width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform .2s;
+    }
+    .toggle-switch.on::after { transform: translateX(16px); }
+
+    /* ── Main Layout ── */
+    .main { display: flex; height: calc(100vh - 48px); }
+
+    /* ── Left Panel ── */
+    .left-panel {
+      width: 420px; min-width: 280px;
+      display: flex; flex-direction: column;
+      border-right: 1px solid var(--border);
+      background: var(--surface); flex-shrink: 0;
+      transition: background .25s, border-color .25s;
+    }
+    .panel-header {
+      padding: 10px 16px; font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-header .stats { font-size: 11px; color: var(--accent3); font-weight: 400; text-transform: none; }
+
+    /* ── Toolbar ── */
+    .toolbar-group {
+      border-bottom: 1px solid var(--border);
+      background: var(--bg); transition: background .25s;
+    }
+    .toolbar-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 16px; flex-wrap: wrap;
+    }
+    .toolbar-row + .toolbar-row {
+      border-top: 1px solid var(--border);
+    }
+    .toolbar-row-label {
+      font-size: 9px; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .8px;
+      min-width: 34px; flex-shrink: 0;
+    }
+    .arrow-btn {
+      padding: 4px 12px; border: 1px solid var(--border); border-radius: 4px;
+      background: var(--surface); color: var(--accent2);
+      font-size: 13px; font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-weight: 600; cursor: pointer; transition: all .15s;
+    }
+    .arrow-btn:hover { background: var(--accent2); color: var(--text-inverse); border-color: var(--accent2); }
+    .toolbar-sep { width: 1px; height: 20px; background: var(--border); margin: 0 2px; }
+
+    #editor {
+      flex: 1; padding: 14px 16px;
+      background: var(--editor-bg); border: none; color: var(--text);
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px; line-height: 1.7; resize: none; outline: none;
+      overflow-y: auto; tab-size: 2; transition: background .25s, color .25s;
+    }
+    #editor::placeholder { color: var(--muted); }
+
+    /* ── Highlight Section ── */
+    .highlight-section {
+      border-top: 1px solid var(--border); padding: 8px 16px;
+      max-height: 220px; overflow-y: auto;
+    }
+    .highlight-section-header {
+      display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;
+    }
+    .highlight-section-header span {
+      font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px;
+    }
+    .highlight-row {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 5px;
+    }
+    .highlight-row:last-child { margin-bottom: 0; }
+    .highlight-color-dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid var(--border); cursor: pointer;
+      flex-shrink: 0; position: relative;
+    }
+    .highlight-color-input {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;
+    }
+    .highlight-name-input {
+      width: 60px; padding: 3px 6px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text); font-family: inherit; font-size: 11px; outline: none;
+      flex-shrink: 0;
+    }
+    .highlight-name-input:focus { border-color: var(--accent2); }
+    .highlight-input {
+      flex: 1; padding: 4px 8px;
+      background: var(--bg); border: 1px solid var(--border); border-radius: 5px;
+      color: var(--text); font-family: inherit; font-size: 12px; outline: none;
+      transition: background .25s, color .25s, border-color .25s;
+    }
+    .highlight-input:focus { border-color: var(--accent2); }
+    .highlight-remove-btn {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 1px solid var(--border); background: none;
+      color: var(--muted); font-size: 12px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; flex-shrink: 0; line-height: 1;
+    }
+    .highlight-remove-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── Resize Handle ── */
+    .resize-handle {
+      width: 4px; cursor: col-resize; background: var(--border);
+      transition: background .15s; flex-shrink: 0;
+    }
+    .resize-handle:hover, .resize-handle.active { background: var(--accent2); }
+
+    /* ── Right Panel ── */
+    .right-panel { flex: 1; position: relative; background: var(--graph-bg); transition: background .25s; }
+    #graph { width: 100%; height: 100%; }
+
+    div.vis-tooltip {
+      background: var(--surface) !important; color: var(--text) !important;
+      border: 1px solid var(--border) !important; border-radius: 6px !important;
+      font-family: inherit !important; font-size: 12px !important; padding: 6px 10px !important;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      position: absolute; bottom: 16px; left: 16px;
+      background: var(--legend-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 10px 14px; font-size: 11px;
+      display: flex; flex-direction: column; gap: 5px;
+      backdrop-filter: blur(8px); transition: background .25s, border-color .25s;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #555; }
+
+    /* ── Watermark ── */
+    .watermark {
+      position: absolute; bottom: 12px; right: 16px;
+      font-size: 11px; color: var(--watermark-color);
+      pointer-events: none; user-select: none;
+      letter-spacing: .5px;
+      transition: color .25s;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--surface); border: 1px solid var(--accent3); color: var(--accent3);
+      padding: 10px 18px; border-radius: 8px; font-size: 13px;
+      opacity: 0; transform: translateY(10px); transition: all .3s;
+      z-index: 9999; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="https://newso.co.kr" target="_blank" rel="noopener" title="Visit newso.co.kr">
+        <img src="logo.svg" alt="Logo" class="topbar-logo" />
+      </a>
+      <div class="topbar-divider"></div>
+      <h1>The Map of Why</h1>
+    </div>
+    <div class="actions">
+      <button class="btn icon-only" id="themeToggle" onclick="toggleTheme()" title="Dark / Light 모드 전환">🌙</button>
+      <div class="dropdown" id="sampleDropdown">
+        <button class="btn" onclick="toggleSampleDropdown()" title="예제 불러오기">📋 Sample ▾</button>
+        <div class="dropdown-menu" id="sampleMenu">
+          <button class="dropdown-item" onclick="loadSample('starwars')">⭐ Star Wars</button>
+          <button class="dropdown-item" onclick="loadSample('hanwoo')">🐂 한우 수익성 DAG</button>
+        </div>
+      </div>
+      <button class="btn" onclick="fitGraph()" title="그래프를 화면에 맞추기">🔍 Fit</button>
+      <button class="btn" onclick="resetAll()" title="에디터·옵션 모두 초기화">🔄 Reset</button>
+      <div class="dropdown" id="exportDropdown">
+        <button class="btn primary" onclick="toggleDropdown()" title="내보내기">⬇ Export</button>
+        <div class="dropdown-menu" id="exportMenu">
+          <button class="dropdown-item" onclick="doExport('html')">📄 Export as HTML</button>
+          <button class="dropdown-item" onclick="doExport('pdf')">📕 Export as PDF</button>
+          <button class="dropdown-item" onclick="doExport('png')">🖼️ Export as PNG</button>
+          <button class="dropdown-item" onclick="doExport('txt')">📝 Export as TXT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main">
+
+    <!-- Left: Editor -->
+    <div class="left-panel" id="leftPanel">
+      <div class="panel-header">
+        <span>Edge Definitions</span>
+        <span class="stats" id="stats">0 nodes · 0 edges</span>
+      </div>
+      <div class="toolbar-group">
+        <div class="toolbar-row">
+          <span class="toolbar-row-label">Style</span>
+          <button class="arrow-btn" id="edgeStyleBtn" onclick="toggleEdgeStyle()" title="직선/곡선 전환">⌇ Curved</button>
+          <div class="toolbar-sep"></div>
+          <button class="arrow-btn" id="layoutBtn" onclick="cycleLayout()" title="레이아웃 변경">○ Free</button>
+          <div class="toolbar-sep"></div>
+          <div class="toggle-wrap">
+            <div class="toggle-switch" id="fixedToggle" onclick="toggleFixed()" title="노드 위치 고정/유동"></div>
+            <span class="toggle-label" id="fixedLabel">Fluid</span>
+          </div>
+          <div class="toolbar-sep"></div>
+          <div class="toggle-wrap">
+            <div class="toggle-switch" id="sizingToggle" onclick="toggleSizing()" title="노드 크기: 균일/연결수"></div>
+            <span class="toggle-label" id="sizingLabel">Uniform</span>
+          </div>
+          <div class="toolbar-sep"></div>
+          <div class="toggle-wrap">
+            <div class="toggle-switch" id="clusterToggle" onclick="toggleCluster()" title="그룹 클러스터 표시"></div>
+            <span class="toggle-label" id="clusterLabel">Cluster</span>
+          </div>
+        </div>
+        <div class="toolbar-row">
+          <span class="toolbar-row-label">Edit</span>
+          <button class="arrow-btn" onclick="insertArrow(' -> ')" title="방향 화살표 삽입">-&gt;</button>
+          <button class="arrow-btn" onclick="insertArrow(' <-> ')" title="양방향 화살표 삽입">&lt;-&gt;</button>
+          <div class="toolbar-sep"></div>
+          <div class="toggle-wrap">
+            <div class="toggle-switch on" id="liveToggle" onclick="toggleLive()" title="실시간 반영 ON/OFF"></div>
+            <span class="toggle-label" id="liveLabel">Live</span>
+          </div>
+          <button class="btn success" id="manualRunBtn" style="display:none;padding:4px 10px;font-size:11px;" onclick="renderGraph()">▶ Generate</button>
+        </div>
+      </div>
+      <textarea id="editor" spellcheck="false" placeholder="Enter edges, one per line:&#10;&#10;  A -> B        (directed)&#10;  A <-> B       (bidirectional)&#10;  A -> B -> C   (chain)&#10;&#10;Lines starting with // are comments.&#10;Blank lines and whitespace are ignored."></textarea>
+
+      <!-- Dynamic Highlight Groups -->
+      <div class="highlight-section" id="highlightSection">
+        <div class="highlight-section-header">
+          <span>Highlight Groups</span>
+          <button class="btn sm" onclick="addHighlightGroup()" title="하이라이트 그룹 추가">+ Add</button>
+        </div>
+        <div id="highlightContainer"></div>
+      </div>
+    </div>
+
+    <!-- Resize Handle -->
+    <div class="resize-handle" id="resizeHandle"></div>
+
+    <!-- Right: Graph -->
+    <div class="right-panel">
+      <div id="graph"></div>
+      <div class="legend" id="legendBox"></div>
+      <div class="watermark">© Antller Inc. All Rights Reserved.</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── State ──
+    let network = null;
+    let debounceTimer = null;
+    let liveMode = true;
+    let selectedNodeId = null;
+    let preserveLayout = false;
+    let fixedLayout = false;
+    let edgeStyle = 'curved'; // 'curved' or 'straight'
+    let layoutMode = 'free'; // 'free' | 'hierarchy-UD' | 'hierarchy-LR'
+    let nodeSizing = 'uniform'; // 'uniform' | 'degree'
+    let clusterByGroup = false;
+
+    // Default highlight colours palette (neon)
+    const DEFAULT_COLORS = ['#ff2d55','#00d4ff','#39ff14','#ff9500','#bf00ff','#ffcc00','#00ffcc','#ff3b30','#5ac8fa','#ff2d95'];
+
+    // Highlight groups: [{name, color, nodes_csv}]
+    let highlightGroups = [
+      { name: 'Outcome', color: '#ff2d55', csv: '' },
+      { name: 'Key',     color: '#00d4ff', csv: '' },
+      { name: 'Factor',  color: '#39ff14', csv: '' },
+    ];
+
+    const editorEl     = document.getElementById('editor');
+    const graphEl      = document.getElementById('graph');
+    const statsEl      = document.getElementById('stats');
+    const toastEl      = document.getElementById('toast');
+    const leftPanel    = document.getElementById('leftPanel');
+    const resizeHandle = document.getElementById('resizeHandle');
+    const themeToggle  = document.getElementById('themeToggle');
+    const liveToggleEl = document.getElementById('liveToggle');
+    const liveLabelEl  = document.getElementById('liveLabel');
+    const manualRunBtn = document.getElementById('manualRunBtn');
+    const highlightContainer = document.getElementById('highlightContainer');
+    const legendBox    = document.getElementById('legendBox');
+
+    // ── Render highlight group rows ──
+    function renderHighlightUI() {
+      highlightContainer.innerHTML = '';
+      highlightGroups.forEach((g, i) => {
+        const row = document.createElement('div');
+        row.className = 'highlight-row';
+        row.innerHTML = `
+          <div class="highlight-color-dot" style="background:${g.color};">
+            <input type="color" class="highlight-color-input" value="${g.color}"
+              oninput="updateGroupColor(${i}, this.value)" />
+          </div>
+          <input class="highlight-name-input" value="${g.name}" placeholder="Name"
+            oninput="updateGroupName(${i}, this.value)" />
+          <input class="highlight-input" value="${g.csv}" placeholder="nodes (comma separated)"
+            oninput="updateGroupCsv(${i}, this.value)" />
+          <button class="highlight-remove-btn" onclick="removeHighlightGroup(${i})" title="삭제">×</button>
+        `;
+        highlightContainer.appendChild(row);
+      });
+      renderLegend();
+    }
+
+    function addHighlightGroup() {
+      const idx = highlightGroups.length;
+      const color = DEFAULT_COLORS[idx % DEFAULT_COLORS.length];
+      highlightGroups.push({ name: `Group ${idx + 1}`, color, csv: '' });
+      renderHighlightUI();
+    }
+
+    function removeHighlightGroup(idx) {
+      if (highlightGroups.length <= 1) { toast('최소 1개 그룹이 필요합니다'); return; }
+      highlightGroups.splice(idx, 1);
+      renderHighlightUI();
+      scheduleRenderIfLive();
+    }
+
+    function updateGroupColor(idx, color) {
+      highlightGroups[idx].color = color;
+      renderHighlightUI();
+      scheduleRenderIfLive();
+    }
+
+    function updateGroupName(idx, name) {
+      highlightGroups[idx].name = name;
+      renderLegend();
+    }
+
+    function updateGroupCsv(idx, csv) {
+      highlightGroups[idx].csv = csv;
+      scheduleRenderIfLive();
+    }
+
+    function renderLegend() {
+      let html = '';
+      highlightGroups.forEach(g => {
+        html += `<div class="legend-item"><div class="legend-dot" style="background:${g.color};border-color:${g.color}"></div> ${g.name || '—'}</div>`;
+      });
+      html += `<div class="legend-item"><div class="legend-dot" style="background:white;border-color:#888"></div> Normal</div>`;
+      html += `<div class="legend-item"><span style="font-size:14px">→</span> Directed</div>`;
+      html += `<div class="legend-item"><span style="font-size:14px">⇄</span> Bidirectional</div>`;
+      legendBox.innerHTML = html;
+    }
+
+    function getHighlightGroupsParsed() {
+      return highlightGroups.map(g => ({
+        nodes: new Set(g.csv.split(',').map(s => s.trim()).filter(Boolean)),
+        color: g.color,
+      }));
+    }
+
+    // ── Theme ──
+    function getTheme() { return document.documentElement.getAttribute('data-theme') || 'dark'; }
+
+    function toggleTheme() {
+      const next = getTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      themeToggle.textContent = next === 'dark' ? '🌙' : '☀️';
+      localStorage.setItem('cib-theme', next);
+      preserveLayout = true;
+      renderGraph();
+      toast(next === 'dark' ? 'Dark mode' : 'Light mode');
+    }
+
+    (function restoreTheme() {
+      const saved = localStorage.getItem('cib-theme');
+      if (saved) {
+        document.documentElement.setAttribute('data-theme', saved);
+        themeToggle.textContent = saved === 'dark' ? '🌙' : '☀️';
+      }
+    })();
+
+    // ── Live toggle ──
+    function toggleLive() {
+      liveMode = !liveMode;
+      liveToggleEl.classList.toggle('on', liveMode);
+      liveLabelEl.textContent = liveMode ? 'Live' : 'Manual';
+      manualRunBtn.style.display = liveMode ? 'none' : 'inline-flex';
+      if (liveMode) renderGraph();
+    }
+
+    // ── Insert arrows ──
+    function insertArrow(arrow) {
+      const start = editorEl.selectionStart, end = editorEl.selectionEnd, val = editorEl.value;
+      editorEl.value = val.substring(0, start) + arrow + val.substring(end);
+      editorEl.selectionStart = editorEl.selectionEnd = start + arrow.length;
+      editorEl.focus();
+      scheduleRenderIfLive();
+    }
+
+    // ── Export dropdown ──
+    function toggleDropdown() { document.getElementById('exportMenu').classList.toggle('show'); }
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#exportDropdown')) document.getElementById('exportMenu').classList.remove('show');
+      if (!e.target.closest('#sampleDropdown')) document.getElementById('sampleMenu').classList.remove('show');
+    });
+    function doExport(type) {
+      document.getElementById('exportMenu').classList.remove('show');
+      if (type === 'html') exportHTML();
+      else if (type === 'pdf') exportPDF();
+      else if (type === 'png') exportPNG();
+      else if (type === 'txt') exportTXT();
+    }
+
+    // ── Filename helper ──
+    function getExportFilename(ext) {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `newso-${yyyy}-${mm}-${dd}.${ext}`;
+    }
+
+    // ── Edge style toggle ──
+    function toggleEdgeStyle() {
+      edgeStyle = edgeStyle === 'curved' ? 'straight' : 'curved';
+      document.getElementById('edgeStyleBtn').textContent = edgeStyle === 'curved' ? '⌇ Curved' : '⏤ Straight';
+      preserveLayout = true;
+      renderGraph();
+    }
+
+    // ── Fixed / Fluid toggle ──
+    function toggleFixed() {
+      fixedLayout = !fixedLayout;
+      document.getElementById('fixedToggle').classList.toggle('on', fixedLayout);
+      document.getElementById('fixedLabel').textContent = fixedLayout ? 'Fixed' : 'Fluid';
+      if (fixedLayout && network) {
+        preserveLayout = true;
+        renderGraph();
+      } else {
+        renderGraph();
+      }
+    }
+
+    // ── Layout cycle ──
+    const LAYOUT_MODES = ['free', 'hierarchy-UD', 'hierarchy-LR'];
+    const LAYOUT_LABELS = { 'free': '○ Free', 'hierarchy-UD': '↕ Hierarchy', 'hierarchy-LR': '↔ Hierarchy' };
+    function cycleLayout() {
+      const idx = LAYOUT_MODES.indexOf(layoutMode);
+      layoutMode = LAYOUT_MODES[(idx + 1) % LAYOUT_MODES.length];
+      document.getElementById('layoutBtn').textContent = LAYOUT_LABELS[layoutMode];
+      renderGraph();
+    }
+
+    // ── Node sizing toggle ──
+    function toggleSizing() {
+      nodeSizing = nodeSizing === 'uniform' ? 'degree' : 'uniform';
+      document.getElementById('sizingToggle').classList.toggle('on', nodeSizing === 'degree');
+      document.getElementById('sizingLabel').textContent = nodeSizing === 'uniform' ? 'Uniform' : 'Degree';
+      preserveLayout = true;
+      renderGraph();
+    }
+
+    // ── Cluster toggle ──
+    function toggleCluster() {
+      clusterByGroup = !clusterByGroup;
+      document.getElementById('clusterToggle').classList.toggle('on', clusterByGroup);
+      document.getElementById('clusterLabel').textContent = clusterByGroup ? 'Cluster ✓' : 'Cluster';
+      preserveLayout = true;
+      renderGraph();
+    }
+
+    // ── Sample DAGs ──
+    const SAMPLE_STARWARS = `// ── Star Wars Character Relationships ──
+
+// Skywalker Family Origins
+Shmi_Skywalker -> Anakin_Skywalker
+Qui-Gon_Jinn -> Anakin_Skywalker
+Obi-Wan_Kenobi -> Anakin_Skywalker
+
+// Anakin & Padmé
+Anakin_Skywalker <-> Padme_Amidala
+
+// Next Generation
+Anakin_Skywalker -> Luke_Skywalker
+Anakin_Skywalker -> Leia_Organa
+Padme_Amidala -> Luke_Skywalker
+Padme_Amidala -> Leia_Organa
+
+// Jedi Masters & Luke
+Obi-Wan_Kenobi -> Luke_Skywalker
+Yoda -> Luke_Skywalker
+
+// Dark Side
+Sheev_Palpatine -> Anakin_Skywalker
+Sheev_Palpatine -> Darth_Vader
+Darth_Vader -> Luke_Skywalker
+
+// Organa Family
+Bail_Organa -> Leia_Organa
+
+// Solo Family
+Leia_Organa <-> Han_Solo
+Leia_Organa -> Ben_Solo
+Han_Solo -> Ben_Solo
+Luke_Skywalker -> Ben_Solo`;
+
+    const SAMPLE_HANWOO = `// ── 한우 수익성 인과 관계 DAG ──
+
+// 1. 외부 환경 및 정책 (External & Policy Factors)
+Regional_Policy -> Farm_Management
+Climate_Condition -> Temperature_Stress
+Climate_Condition -> Feed_Crop_Yield
+Feed_Crop_Yield -> Market_Price
+
+// 2. 농장 관리 및 인프라 (Management & Infrastructure)
+Farm_Management -> Feed_Quality
+Farm_Management -> Housing_Environment
+Farm_Management -> Vaccination_Schedule
+Housing_Environment -> Temperature_Stress
+Housing_Environment -> Health_Status
+
+// 3. 생물학적 메커니즘 (Biological Mechanisms)
+Genetic_Value -> Growth_Potential
+Temperature_Stress -> Feed_Intake
+Temperature_Stress -> Health_Status
+Feed_Quality -> Feed_Intake
+Health_Status -> Feed_Intake
+Health_Status -> Growth_Rate
+Feed_Intake -> Growth_Rate
+Growth_Potential -> Growth_Rate
+
+// 4. 경제적 성과 및 시장 데이터 (Economic Outcomes)
+Growth_Rate -> Slaughter_Timing
+Slaughter_Timing -> Meat_Quality
+Meat_Quality -> Farm_Profit
+Slaughter_Timing -> Farm_Profit
+Market_Price -> Farm_Profit
+Farm_Profit -> Reinvestment_Capacity`;
+
+    // ── Parser ──
+    function parseEdges(text) {
+      const lines = text.split('\n'), edges = [];
+      for (let line of lines) {
+        line = line.trim();
+        if (!line || line.startsWith('//') || line.startsWith('#')) continue;
+        const tokens = line.split(/\s+/);
+        let i = 0;
+        while (i < tokens.length) {
+          const from = tokens[i], op = tokens[i+1], to = tokens[i+2];
+          if (!from || !op || !to) break;
+          if (op === '->' || op === '<->') {
+            edges.push({ from, to, arrows: op === '<->' ? 'to, from' : 'to' });
+            i += 2;
+          } else { i++; }
+        }
+      }
+      return edges;
+    }
+
+    // ── Theme colours ──
+    function getThemeColors() {
+      const cs = getComputedStyle(document.documentElement);
+      return {
+        accent2:      cs.getPropertyValue('--accent2').trim(),
+        edgeColor:    cs.getPropertyValue('--edge-color').trim(),
+        edgeDim:      cs.getPropertyValue('--edge-dim').trim(),
+        nodeLabel:    cs.getPropertyValue('--node-label').trim(),
+        normalBg:     cs.getPropertyValue('--node-normal-bg').trim(),
+        normalBorder: cs.getPropertyValue('--node-normal-border').trim(),
+        graphBg:      cs.getPropertyValue('--graph-bg').trim(),
+      };
+    }
+
+    // ── Build adjacency for highlight ──
+    function buildAdjacency(edgeList) {
+      const adj = {};  // nodeId -> Set of connected nodeIds
+      const edgeMap = {}; // nodeId -> Set of edge indices
+      edgeList.forEach((e, i) => {
+        if (!adj[e.from]) adj[e.from] = new Set();
+        if (!adj[e.to]) adj[e.to] = new Set();
+        adj[e.from].add(e.to);
+        adj[e.to].add(e.from);
+        if (!edgeMap[e.from]) edgeMap[e.from] = new Set();
+        if (!edgeMap[e.to]) edgeMap[e.to] = new Set();
+        edgeMap[e.from].add(i);
+        edgeMap[e.to].add(i);
+      });
+      return { adj, edgeMap };
+    }
+
+    // ── Render ──
+    function renderGraph() {
+      // Save positions before destroying network
+      let prevPositions = {};
+      if (network && (preserveLayout || fixedLayout)) {
+        prevPositions = network.getPositions();
+      }
+
+      const edgeList = parseEdges(editorEl.value);
+      const groups = getHighlightGroupsParsed();
+      const c = getThemeColors();
+      const { adj, edgeMap } = buildAdjacency(edgeList);
+
+      const nodeIds = new Set();
+      edgeList.forEach(e => { nodeIds.add(e.from); nodeIds.add(e.to); });
+
+      // Determine which nodes/edges are "active" when a node is selected
+      const hasSelection = selectedNodeId && nodeIds.has(selectedNodeId);
+      const activeNodes = new Set();
+      const activeEdges = new Set();
+      if (hasSelection) {
+        activeNodes.add(selectedNodeId);
+        if (adj[selectedNodeId]) {
+          adj[selectedNodeId].forEach(n => activeNodes.add(n));
+        }
+        if (edgeMap[selectedNodeId]) {
+          edgeMap[selectedNodeId].forEach(idx => activeEdges.add(idx));
+        }
+      }
+
+      // Compute degree for each node
+      const degreeMap = {};
+      edgeList.forEach(e => {
+        degreeMap[e.from] = (degreeMap[e.from] || 0) + 1;
+        degreeMap[e.to] = (degreeMap[e.to] || 0) + 1;
+      });
+      const maxDeg = Math.max(1, ...Object.values(degreeMap));
+
+      const nodes = Array.from(nodeIds).sort().map(id => {
+        let hiColor = null;
+        for (const g of groups) { if (g.nodes.has(id)) { hiColor = g.color; break; } }
+        const hi = !!hiColor;
+
+        // Dim unconnected nodes when a node is selected
+        const dimmed = hasSelection && !activeNodes.has(id);
+        const isSelected = hasSelection && id === selectedNodeId;
+
+        const deg = degreeMap[id] || 1;
+        const sizeScale = nodeSizing === 'degree' ? 0.5 + (deg / maxDeg) * 1.0 : 1;
+
+        let bgColor = hi ? hiColor : c.normalBg;
+        let borderColor = hi ? hiColor : c.normalBorder;
+        let labelColor = c.nodeLabel;
+        let nodeSize = Math.round((hi ? 28 : 18) * sizeScale);
+        let fontSize = Math.round((hi ? 24 : 16) * sizeScale);
+        let bw = hi ? 2.5 : 1.5;
+
+        if (dimmed) {
+          bgColor = getTheme() === 'dark' ? '#3a3a4a' : '#e8e8eb';
+          borderColor = getTheme() === 'dark' ? '#44445a' : '#d0d0d5';
+          labelColor = getTheme() === 'dark' ? '#555570' : '#b0b0b8';
+          nodeSize = Math.round((hi ? 24 : 14) * sizeScale);
+          fontSize = Math.round((hi ? 18 : 12) * sizeScale);
+          bw = 1;
+        }
+        if (isSelected) {
+          borderColor = c.accent2;
+          bw = 4;
+          nodeSize += 6;
+        }
+
+        const node = {
+          id, label: id, size: nodeSize,
+          font: { size: fontSize, face: 'arial', color: labelColor },
+          color: {
+            background: bgColor, border: borderColor,
+            highlight: { background: bgColor, border: c.accent2 },
+            hover: { background: bgColor, border: borderColor },
+          },
+          borderWidth: bw, shape: 'dot',
+        };
+        if (prevPositions[id]) {
+          node.x = prevPositions[id].x;
+          node.y = prevPositions[id].y;
+        }
+        return node;
+      });
+
+      const edges = edgeList.map((e, i) => {
+        const dimmed = hasSelection && !activeEdges.has(i);
+        const active = hasSelection && activeEdges.has(i);
+        return {
+          id: `e${i}`, from: e.from, to: e.to, arrows: e.arrows,
+          color: {
+            color: dimmed ? c.edgeDim : c.edgeColor,
+            highlight: c.accent2,
+            hover: active ? c.accent2 : c.edgeColor,
+          },
+          width: active ? 2.5 : (dimmed ? 0.5 : 1.2),
+          smooth: edgeStyle === 'curved' ? { type: 'continuous' } : false,
+        };
+      });
+
+      statsEl.textContent = `${nodes.length} nodes · ${edges.length} edges`;
+
+      const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
+      const smoothOpt = edgeStyle === 'curved' ? { type: 'continuous' } : false;
+      const hasPositions = Object.keys(prevPositions).length > 0;
+
+      // Layout config
+      let layoutOpt = { improvedLayout: true };
+      let physicsOpt;
+      if (layoutMode.startsWith('hierarchy')) {
+        const dir = layoutMode === 'hierarchy-UD' ? 'UD' : 'LR';
+        layoutOpt = {
+          hierarchical: { direction: dir, sortMethod: 'directed', shakeTowards: 'roots', levelSeparation: 150, nodeSpacing: 120 }
+        };
+        physicsOpt = {
+          hierarchicalRepulsion: { centralGravity: 0.0, springLength: 150, springConstant: 0.01, nodeDistance: 180 },
+          stabilization: { enabled: true, iterations: 500 },
+        };
+      } else if (hasPositions) {
+        physicsOpt = false;
+      } else {
+        physicsOpt = {
+          solver: 'barnesHut',
+          barnesHut: { gravitationalConstant: -2000, centralGravity: 0.2, springLength: 220, springConstant: 0.02, damping: 0.25 },
+          stabilization: { enabled: true, iterations: 2000 },
+        };
+      }
+
+      const options = {
+        physics: physicsOpt,
+        interaction: { dragNodes: true, dragView: true, zoomView: true, hover: true, tooltipDelay: 200, keyboard: false },
+        nodes: { shape: 'dot', font: { size: 16, face: 'arial' } },
+        edges: { smooth: smoothOpt, color: { color: c.edgeColor } },
+        layout: layoutOpt,
+      };
+
+      if (network) network.destroy();
+      network = new vis.Network(graphEl, data, options);
+      preserveLayout = false;
+
+      // Cluster overlay: draw convex hulls for highlight groups
+      if (clusterByGroup) {
+        network.on('afterDrawing', function(ctx) {
+          const allPositions = network.getPositions();
+          highlightGroups.forEach(g => {
+            const memberIds = g.csv.split(',').map(s => s.trim()).filter(s => s && allPositions[s]);
+            if (memberIds.length < 2) return;
+            const pts = memberIds.map(id => {
+              const pos = allPositions[id];
+              return { x: pos.x, y: pos.y };
+            });
+            const hull = convexHull(pts);
+            if (hull.length < 2) return;
+            ctx.save();
+            ctx.globalAlpha = 0.10;
+            ctx.fillStyle = g.color;
+            ctx.strokeStyle = g.color;
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.12;
+            // Draw expanded hull with padding
+            const pad = 45;
+            const center = hull.reduce((a, p) => ({ x: a.x + p.x / hull.length, y: a.y + p.y / hull.length }), { x: 0, y: 0 });
+            ctx.beginPath();
+            hull.forEach((p, i) => {
+              const dx = p.x - center.x, dy = p.y - center.y;
+              const len = Math.sqrt(dx * dx + dy * dy) || 1;
+              const ex = p.x + (dx / len) * pad, ey = p.y + (dy / len) * pad;
+              i === 0 ? ctx.moveTo(ex, ey) : ctx.lineTo(ex, ey);
+            });
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 0.35;
+            ctx.setLineDash([6, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.restore();
+          });
+        });
+      }
+
+      // Click to highlight connected neighbourhood
+      network.on('click', params => {
+        if (params.nodes.length > 0) {
+          const clickedId = params.nodes[0];
+          if (selectedNodeId === clickedId) {
+            selectedNodeId = null;
+          } else {
+            selectedNodeId = clickedId;
+          }
+        } else {
+          selectedNodeId = null;
+        }
+        preserveLayout = true;
+        renderGraph();
+      });
+    }
+
+    // ── Debounced Render ──
+    function scheduleRenderIfLive() {
+      if (!liveMode) return;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(renderGraph, 400);
+    }
+
+    editorEl.addEventListener('input', scheduleRenderIfLive);
+
+    function fitGraph() {
+      if (network) network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
+    }
+
+    function resetAll() {
+      editorEl.value = '';
+      selectedNodeId = null;
+      preserveLayout = false;
+      fixedLayout = false;
+      edgeStyle = 'curved';
+      layoutMode = 'free';
+      nodeSizing = 'uniform';
+      clusterByGroup = false;
+      highlightGroups = [
+        { name: 'Outcome', color: '#ff2d55', csv: '' },
+        { name: 'Key',     color: '#00d4ff', csv: '' },
+        { name: 'Factor',  color: '#39ff14', csv: '' },
+      ];
+      // Reset UI toggles
+      document.getElementById('fixedToggle').classList.remove('on');
+      document.getElementById('fixedLabel').textContent = 'Fluid';
+      document.getElementById('edgeStyleBtn').textContent = '⌇ Curved';
+      document.getElementById('layoutBtn').textContent = '○ Free';
+      document.getElementById('sizingToggle').classList.remove('on');
+      document.getElementById('sizingLabel').textContent = 'Uniform';
+      document.getElementById('clusterToggle').classList.remove('on');
+      document.getElementById('clusterLabel').textContent = 'Cluster';
+      liveMode = true;
+      document.getElementById('liveToggle').classList.add('on');
+      document.getElementById('liveLabel').textContent = 'Live';
+      manualRunBtn.style.display = 'none';
+      renderHighlightUI();
+      renderGraph();
+      toast('Reset complete');
+    }
+
+    // ── Sample dropdown toggle ──
+    function toggleSampleDropdown() { document.getElementById('sampleMenu').classList.toggle('show'); }
+
+    function loadSample(type) {
+      document.getElementById('sampleMenu').classList.remove('show');
+      if (type === 'starwars') {
+        editorEl.value = SAMPLE_STARWARS;
+        highlightGroups = [
+          { name: 'Skywalker',   color: '#00d4ff', csv: 'Anakin_Skywalker, Luke_Skywalker, Leia_Organa, Shmi_Skywalker' },
+          { name: 'Dark Side',   color: '#ff2d55', csv: 'Sheev_Palpatine, Darth_Vader' },
+          { name: 'Jedi',        color: '#39ff14', csv: 'Obi-Wan_Kenobi, Yoda, Qui-Gon_Jinn' },
+          { name: 'Solo',        color: '#ff9500', csv: 'Han_Solo, Ben_Solo' },
+        ];
+        // Reset to free layout for Star Wars
+        layoutMode = 'free';
+        document.getElementById('layoutBtn').textContent = LAYOUT_LABELS[layoutMode];
+        toast('Star Wars Sample loaded!');
+      } else if (type === 'hanwoo') {
+        editorEl.value = SAMPLE_HANWOO;
+        highlightGroups = [
+          { name: '외부환경',    color: '#00d4ff', csv: 'Regional_Policy, Climate_Condition, Feed_Crop_Yield, Market_Price' },
+          { name: '농장관리',    color: '#39ff14', csv: 'Farm_Management, Feed_Quality, Housing_Environment, Vaccination_Schedule' },
+          { name: '생물학적',    color: '#ff9500', csv: 'Genetic_Value, Growth_Potential, Temperature_Stress, Feed_Intake, Health_Status, Growth_Rate' },
+          { name: '경제성과',    color: '#ff2d55', csv: 'Slaughter_Timing, Meat_Quality, Farm_Profit, Reinvestment_Capacity' },
+        ];
+        // Hierarchy works well for this causal DAG
+        layoutMode = 'hierarchy-UD';
+        document.getElementById('layoutBtn').textContent = LAYOUT_LABELS[layoutMode];
+        // Enable degree sizing
+        nodeSizing = 'degree';
+        document.getElementById('sizingToggle').classList.add('on');
+        document.getElementById('sizingLabel').textContent = 'Degree';
+        toast('한우 수익성 DAG loaded!');
+      }
+      renderHighlightUI();
+      selectedNodeId = null;
+      preserveLayout = false;
+      renderGraph();
+    }
+
+    // ── Build export data ──
+    function buildExportData() {
+      const edgeList = parseEdges(editorEl.value);
+      const groups = getHighlightGroupsParsed();
+      const c = getThemeColors();
+      const nodeIds = new Set();
+      edgeList.forEach(e => { nodeIds.add(e.from); nodeIds.add(e.to); });
+      const nodesArr = Array.from(nodeIds).sort().map(id => {
+        let hiColor = null;
+        for (const g of groups) { if (g.nodes.has(id)) { hiColor = g.color; break; } }
+        const hi = !!hiColor;
+        return {
+          id, label: id, size: hi ? 28 : 18,
+          font: { size: hi ? 24 : 16, face: 'arial', color: c.nodeLabel },
+          color: { background: hi ? hiColor : c.normalBg, border: hi ? hiColor : c.normalBorder, highlight: { background: c.accent2, border: c.accent2 } },
+          borderWidth: hi ? 2.5 : 1.5, shape: 'dot',
+        };
+      });
+      const edgesArr = edgeList.map((e, i) => ({
+        id: `e${i}`, from: e.from, to: e.to, arrows: e.arrows,
+        color: { color: c.edgeColor, highlight: c.accent2 }, width: 1.2, smooth: edgeStyle === 'curved' ? { type: 'continuous' } : false,
+      }));
+      return { nodesArr, edgesArr, graphBg: c.graphBg };
+    }
+
+    function exportHTML() {
+      const { nodesArr, edgesArr, graphBg } = buildExportData();
+      const html = `<!DOCTYPE html>
+<html lang="ko"><head><meta charset="UTF-8"/><title>The Map of Why – Export</title>
+<script src="https://unpkg.com/vis-network@9.1.6/standalone/umd/vis-network.min.js"><\/script>
+<style>body{margin:0;background:${graphBg};overflow:hidden}#graph{width:100vw;height:100vh}
+.wm{position:fixed;bottom:12px;right:16px;font-size:11px;color:rgba(128,128,128,.25);pointer-events:none;font-family:sans-serif}</style></head>
+<body><div id="graph"></div><div class="wm">© Antller Inc. All Rights Reserved.</div><script>
+var nodes=new vis.DataSet(${JSON.stringify(nodesArr)});
+var edges=new vis.DataSet(${JSON.stringify(edgesArr)});
+var network=new vis.Network(document.getElementById('graph'),{nodes:nodes,edges:edges},{
+physics:{solver:'barnesHut',barnesHut:{gravitationalConstant:-2000,centralGravity:0.2,springLength:220,springConstant:0.02,damping:0.25},stabilization:{enabled:true,iterations:2000}},
+interaction:{dragNodes:true,dragView:true,zoomView:true,hover:true,keyboard:false},layout:{improvedLayout:true}});
+network.on('click',function(p){if(p.nodes.length){var n=p.nodes[0];network.selectNodes([n].concat(network.getConnectedNodes(n)));network.selectEdges(network.getConnectedEdges(n))}});
+<\/script></body></html>`;
+      downloadFile(getExportFilename('html'), html, 'text/html');
+      toast('HTML exported!');
+    }
+
+    async function exportPDF() {
+      toast('Rendering PDF...');
+      if (network) network.stopSimulation();
+      await new Promise(r => setTimeout(r, 300));
+      const canvas = await html2canvas(graphEl, { backgroundColor: getThemeColors().graphBg, scale: 2, useCORS: true, logging: false });
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const cw = canvas.width, ch = canvas.height;
+      const pdf = new jsPDF({ orientation: cw > ch ? 'landscape' : 'portrait', unit: 'px', format: [cw, ch] });
+      pdf.addImage(imgData, 'PNG', 0, 0, cw, ch);
+      pdf.save(getExportFilename('pdf'));
+      toast('PDF exported!');
+    }
+
+    async function exportPNG() {
+      toast('Rendering PNG...');
+      if (network) network.stopSimulation();
+      await new Promise(r => setTimeout(r, 300));
+      const canvas = await html2canvas(graphEl, { backgroundColor: getThemeColors().graphBg, scale: 2, useCORS: true, logging: false });
+      const link = document.createElement('a');
+      link.download = getExportFilename('png');
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      toast('PNG exported!');
+    }
+
+    function exportTXT() {
+      downloadFile(getExportFilename('txt'), editorEl.value, 'text/plain');
+      toast('TXT exported!');
+    }
+
+    function downloadFile(name, content, mime) {
+      const blob = new Blob([content], { type: mime });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function toast(msg) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      setTimeout(() => toastEl.classList.remove('show'), 2200);
+    }
+
+    // ── Resize Handle ──
+    let isResizing = false;
+    resizeHandle.addEventListener('mousedown', e => {
+      isResizing = true;
+      resizeHandle.classList.add('active');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+      if (!isResizing) return;
+      const newWidth = Math.max(200, Math.min(e.clientX, window.innerWidth - 300));
+      leftPanel.style.width = newWidth + 'px';
+      if (network) network.redraw();
+    });
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        resizeHandle.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        if (network) { network.redraw(); network.fit(); }
+      }
+    });
+
+    editorEl.addEventListener('keydown', e => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = editorEl.selectionStart, end = editorEl.selectionEnd;
+        editorEl.value = editorEl.value.substring(0, s) + '  ' + editorEl.value.substring(end);
+        editorEl.selectionStart = editorEl.selectionEnd = s + 2;
+        scheduleRenderIfLive();
+      }
+    });
+
+    // ── Convex Hull (Graham scan) ──
+    function convexHull(points) {
+      if (points.length <= 2) return points.slice();
+      const pts = points.slice().sort((a, b) => a.x - b.x || a.y - b.y);
+      const cross = (O, A, B) => (A.x - O.x) * (B.y - O.y) - (A.y - O.y) * (B.x - O.x);
+      const lower = [];
+      for (const p of pts) {
+        while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+        lower.push(p);
+      }
+      const upper = [];
+      for (let i = pts.length - 1; i >= 0; i--) {
+        const p = pts[i];
+        while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+        upper.push(p);
+      }
+      lower.pop(); upper.pop();
+      return lower.concat(upper);
+    }
+
+    // ── Init ──
+    renderHighlightUI();
+    renderGraph();
+  </script>
+</body>
+</html>
