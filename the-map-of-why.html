@@ -264,6 +264,43 @@
       transition: color .25s;
     }
 
+    /* ── Idle Quote ── */
+    .idle-quote {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center; pointer-events: none; user-select: none;
+      max-width: 480px; padding: 0 24px;
+      transition: opacity .4s;
+    }
+    .idle-quote.hidden { opacity: 0; pointer-events: none; }
+    .idle-quote blockquote {
+      font-size: 18px; font-style: italic; line-height: 1.6;
+      color: var(--muted); letter-spacing: .3px;
+      margin: 0;
+    }
+    .idle-quote cite {
+      display: block; margin-top: 12px;
+      font-size: 13px; font-style: normal;
+      color: var(--muted); opacity: .6;
+    }
+
+    /* ── Zoom Controls ── */
+    .zoom-controls {
+      position: absolute; bottom: 36px; right: 16px;
+      display: flex; flex-direction: column; gap: 4px;
+      z-index: 10;
+    }
+    .zoom-btn {
+      width: 32px; height: 32px;
+      border: 1px solid var(--border); border-radius: 6px;
+      background: var(--surface); color: var(--text);
+      font-size: 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s; opacity: .75;
+      line-height: 1;
+    }
+    .zoom-btn:hover { opacity: 1; background: var(--border); }
+
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -292,11 +329,14 @@
     </div>
     <div class="actions">
       <button class="btn icon-only" id="themeToggle" onclick="toggleTheme()" title="Dark / Light 모드 전환">🌙</button>
-      <div class="dropdown" id="sampleDropdown">
-        <button class="btn" onclick="toggleSampleDropdown()" title="예제 불러오기">📋 Sample ▾</button>
-        <div class="dropdown-menu" id="sampleMenu">
-          <button class="dropdown-item" onclick="loadSample('starwars')">⭐ Star Wars</button>
-          <button class="dropdown-item" onclick="loadSample('hanwoo')">🐂 한우 수익성 DAG</button>
+      <div class="dropdown" id="exampleDropdown">
+        <button class="btn" onclick="toggleExampleDropdown()" title="예제 불러오기">📋 Example ▾</button>
+        <div class="dropdown-menu" id="exampleMenu">
+          <button class="dropdown-item" onclick="loadExample('astrobotany')">🌱 Astrobotany</button>
+          <button class="dropdown-item" onclick="loadExample('fertilizer')">🌿 비료 양분 관계도</button>
+          <button class="dropdown-item" onclick="loadExample('hanwoo')">🐂 한우 수익성</button>
+          <button class="dropdown-item" onclick="loadExample('dooly')">🦕 아기공룡둘리</button>
+          <button class="dropdown-item" onclick="loadExample('starwars')">⭐ Star Wars</button>
         </div>
       </div>
       <button class="btn" onclick="fitGraph()" title="그래프를 화면에 맞추기">🔍 Fit</button>
@@ -343,6 +383,11 @@
             <div class="toggle-switch" id="clusterToggle" onclick="toggleCluster()" title="그룹 클러스터 표시"></div>
             <span class="toggle-label" id="clusterLabel">Cluster</span>
           </div>
+          <div class="toolbar-sep"></div>
+          <div class="toggle-wrap">
+            <div class="toggle-switch on" id="edgeLabelToggle" onclick="toggleEdgeLabels()" title="엣지 설명 라벨 표시"></div>
+            <span class="toggle-label" id="edgeLabelLabel">Labels ✓</span>
+          </div>
         </div>
         <div class="toolbar-row">
           <span class="toolbar-row-label">Edit</span>
@@ -356,7 +401,7 @@
           <button class="btn success" id="manualRunBtn" style="display:none;padding:4px 10px;font-size:11px;" onclick="renderGraph()">▶ Generate</button>
         </div>
       </div>
-      <textarea id="editor" spellcheck="false" placeholder="Enter edges, one per line:&#10;&#10;  A -> B        (directed)&#10;  A <-> B       (bidirectional)&#10;  A -> B -> C   (chain)&#10;&#10;Lines starting with // are comments.&#10;Blank lines and whitespace are ignored."></textarea>
+      <textarea id="editor" spellcheck="false" placeholder="Enter edges, one per line:&#10;&#10;  A -> B              (directed)&#10;  A <-> B             (bidirectional)&#10;  A -> B -> C         (chain)&#10;  A -> B : reason      (with description)&#10;&#10;Lines starting with // are comments.&#10;Blank lines and whitespace are ignored."></textarea>
 
       <!-- Dynamic Highlight Groups -->
       <div class="highlight-section" id="highlightSection">
@@ -374,7 +419,16 @@
     <!-- Right: Graph -->
     <div class="right-panel">
       <div id="graph"></div>
+      <div class="idle-quote" id="idleQuote">
+        <blockquote>“Causal models encode our assumptions about how the world works.”</blockquote>
+        <cite>— Judea Pearl</cite>
+      </div>
       <div class="legend" id="legendBox"></div>
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">+</button>
+        <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+        <button class="zoom-btn" onclick="fitGraph()" title="Fit" style="font-size:13px;">&#x2922;</button>
+      </div>
       <div class="watermark">© Antller Inc. All Rights Reserved.</div>
     </div>
   </div>
@@ -393,6 +447,8 @@
     let layoutMode = 'free'; // 'free' | 'hierarchy-UD' | 'hierarchy-LR'
     let nodeSizing = 'uniform'; // 'uniform' | 'degree'
     let clusterByGroup = false;
+    let showEdgeLabels = true; // edge description label visibility
+    const EDGE_LABEL_MAX_CHARS = 12; // auto line-break threshold
 
     // Default highlight colours palette (neon)
     const DEFAULT_COLORS = ['#ff2d55','#00d4ff','#39ff14','#ff9500','#bf00ff','#ffcc00','#00ffcc','#ff3b30','#5ac8fa','#ff2d95'];
@@ -530,7 +586,7 @@
     function toggleDropdown() { document.getElementById('exportMenu').classList.toggle('show'); }
     document.addEventListener('click', e => {
       if (!e.target.closest('#exportDropdown')) document.getElementById('exportMenu').classList.remove('show');
-      if (!e.target.closest('#sampleDropdown')) document.getElementById('sampleMenu').classList.remove('show');
+      if (!e.target.closest('#exampleDropdown')) document.getElementById('exampleMenu').classList.remove('show');
     });
     function doExport(type) {
       document.getElementById('exportMenu').classList.remove('show');
@@ -598,8 +654,17 @@
       renderGraph();
     }
 
-    // ── Sample DAGs ──
-    const SAMPLE_STARWARS = `// ── Star Wars Character Relationships ──
+    // ── Edge labels toggle ──
+    function toggleEdgeLabels() {
+      showEdgeLabels = !showEdgeLabels;
+      document.getElementById('edgeLabelToggle').classList.toggle('on', showEdgeLabels);
+      document.getElementById('edgeLabelLabel').textContent = showEdgeLabels ? 'Labels ✓' : 'Labels';
+      preserveLayout = true;
+      renderGraph();
+    }
+
+    // ── Example DAGs ──
+    const EXAMPLE_STARWARS = `// ── Star Wars Character Relationships ──
 
 // Skywalker Family Origins
 Shmi_Skywalker -> Anakin_Skywalker
@@ -633,38 +698,235 @@ Leia_Organa -> Ben_Solo
 Han_Solo -> Ben_Solo
 Luke_Skywalker -> Ben_Solo`;
 
-    const SAMPLE_HANWOO = `// ── 한우 수익성 인과 관계 DAG ──
+    const EXAMPLE_HANWOO = `// ── 한우 수익성 인과 관계 ──
 
 // 1. 외부 환경 및 정책 (External & Policy Factors)
-Regional_Policy -> Farm_Management
-Climate_Condition -> Temperature_Stress
-Climate_Condition -> Feed_Crop_Yield
-Feed_Crop_Yield -> Market_Price
+Regional_Policy -> Farm_Management : 보조금·규제
+Climate_Condition -> Temperature_Stress : 폭염/한파
+Climate_Condition -> Feed_Crop_Yield : 작황 영향
+Feed_Crop_Yield -> Market_Price : 공급량 변동
 
 // 2. 농장 관리 및 인프라 (Management & Infrastructure)
-Farm_Management -> Feed_Quality
-Farm_Management -> Housing_Environment
-Farm_Management -> Vaccination_Schedule
-Housing_Environment -> Temperature_Stress
-Housing_Environment -> Health_Status
+Farm_Management -> Feed_Quality : 사료 배합 관리
+Farm_Management -> Housing_Environment : 축사 환경 개선
+Farm_Management -> Vaccination_Schedule : 방역 계획
+Housing_Environment -> Temperature_Stress : 냉난방 조절
+Housing_Environment -> Health_Status : 위생 환경
 
 // 3. 생물학적 메커니즘 (Biological Mechanisms)
-Genetic_Value -> Growth_Potential
-Temperature_Stress -> Feed_Intake
-Temperature_Stress -> Health_Status
-Feed_Quality -> Feed_Intake
-Health_Status -> Feed_Intake
-Health_Status -> Growth_Rate
-Feed_Intake -> Growth_Rate
-Growth_Potential -> Growth_Rate
+Genetic_Value -> Growth_Potential : 유전적 소질
+Temperature_Stress -> Feed_Intake : 섭취량 감소
+Temperature_Stress -> Health_Status : 면역력 저하
+Feed_Quality -> Feed_Intake : 기호성·영양
+Health_Status -> Feed_Intake : 컨디션 영향
+Health_Status -> Growth_Rate : 질병 시 성장 저하
+Feed_Intake -> Growth_Rate : 영양 공급
+Growth_Potential -> Growth_Rate : 성장 한계치
 
 // 4. 경제적 성과 및 시장 데이터 (Economic Outcomes)
-Growth_Rate -> Slaughter_Timing
-Slaughter_Timing -> Meat_Quality
-Meat_Quality -> Farm_Profit
-Slaughter_Timing -> Farm_Profit
-Market_Price -> Farm_Profit
-Farm_Profit -> Reinvestment_Capacity`;
+Growth_Rate -> Slaughter_Timing : 적정 출하 시점
+Slaughter_Timing -> Meat_Quality : 육질 등급
+Meat_Quality -> Farm_Profit : 등급별 단가
+Slaughter_Timing -> Farm_Profit : 출하 비용
+Market_Price -> Farm_Profit : 시세 반영
+Farm_Profit -> Reinvestment_Capacity : 재투자 여력`;
+
+    const EXAMPLE_ASTROBOTANY = `// ── Astrobotany: 우주농업 인과 관계 ──
+
+// 1. 환경 조건 (Environmental Conditions)
+Environment_Type -> Gravity_Level : 환경에 따라 중력 조건이 결정됨
+Environment_Type -> Radiation_Level : 환경에 따라 방사선 노출 수준이 달라짐
+Environment_Type -> Atmospheric_Pressure : 행성 및 지역 환경이 기압을 규정함
+Environment_Type -> Temperature_Extremes : 환경이 온도 변동성과 극한 조건을 형성함
+Environment_Type -> Solar_Irradiance : 위치와 천체 조건이 일사량을 결정함
+Environment_Type -> Water_Availability : 환경이 물의 존재 형태와 접근성을 좌우함
+Environment_Type -> Soil_Availability : 환경이 토양 또는 배지 존재 여부를 결정함
+Environment_Type -> Dust_Storm_Frequency : 행성 및 기후 조건이 먼지 발생 빈도를 결정함
+
+// 2. 1차 영향 (Primary Effects)
+Gravity_Level -> Root_Growth_Pattern : 중력이 뿌리 방향성과 생장 형태에 영향을 줌
+Radiation_Level -> Crop_Stress : 방사선은 식물의 생리적 스트레스를 증가시킴
+Atmospheric_Pressure -> Greenhouse_Sealing_Requirement : 낮은 기압일수록 밀폐 구조 필요성이 증가함
+Temperature_Extremes -> Thermal_Control_Demand : 극한 온도는 열 제어 시스템 수요를 증가시킴
+Solar_Irradiance -> Photosynthesis_Potential : 일사량은 광합성 잠재력을 직접 결정함
+Water_Availability -> Irrigation_System_Need : 물 부족 환경일수록 관개 시스템 의존도가 높아짐
+Soil_Availability -> Substrate_Processing_Need : 토양이 없거나 부적합하면 인공 배지 처리가 필요함
+Dust_Storm_Frequency -> Solar_Panel_Output : 먼지는 태양광 발전 효율을 저하시킴
+
+// 3. 인프라 요구 (Infrastructure Requirements)
+Greenhouse_Sealing_Requirement -> Infrastructure_Complexity : 밀폐 요구가 높을수록 구조 설계 복잡성이 증가함
+Thermal_Control_Demand -> Energy_Demand : 온도 제어는 지속적인 에너지 소비를 유발함
+Irrigation_System_Need -> Water_Recycling_System : 물이 제한될수록 재활용 시스템이 필수화됨
+Substrate_Processing_Need -> Nutrient_Delivery_Control : 인공 배지는 정밀 영양 공급 시스템을 요구함
+
+// 4. 에너지 경로 (Energy Pathway)
+Solar_Panel_Output -> Energy_Availability : 발전량이 에너지 가용성을 결정함
+Energy_Availability -> Artificial_Lighting : 에너지가 확보되어야 인공 조명이 가능함
+Energy_Availability -> Life_Support_System_Stability : 안정적인 에너지가 생명유지 시스템 지속성을 보장함
+Energy_Demand -> Operational_Cost : 에너지 소비 증가는 운영 비용 상승으로 이어짐
+
+// 5. 식물 생리 경로 (Plant Physiology Pathway)
+Artificial_Lighting -> Photosynthesis_Rate : 인공 조명은 광합성 속도를 직접 결정함
+Photosynthesis_Potential -> Photosynthesis_Rate : 환경 기반 광합성 잠재력이 실제 광합성률에 반영됨
+Water_Recycling_System -> Water_Use_Efficiency : 재활용 시스템은 물 이용 효율을 향상시킴
+Water_Use_Efficiency -> Plant_Water_Status : 물 이용 효율이 식물 수분 상태를 좌우함
+Nutrient_Delivery_Control -> Nutrient_Uptake : 정밀 영양 공급이 양분 흡수율을 향상시킴
+Root_Growth_Pattern -> Nutrient_Uptake : 뿌리 구조는 양분 흡수 효율에 직접 영향함
+Plant_Water_Status -> Crop_Physiological_Stability : 수분 상태가 생리적 안정성을 결정함
+Nutrient_Uptake -> Crop_Growth_Rate : 양분 흡수는 생장 속도의 핵심 요인임
+
+// 6. 차폐 및 구조 경로 (Shielding & Structure)
+Radiation_Level -> Shielding_System_Need : 방사선이 높을수록 차폐 시스템 필요성이 증가함
+Shielding_System_Need -> Infrastructure_Mass : 차폐 설계는 구조 질량 증가로 이어짐
+Infrastructure_Mass -> Launch_and_Deployment_Cost : 구조 질량이 높을수록 수송 및 구축 비용이 증가함
+Infrastructure_Complexity -> System_Failure_Risk : 복잡한 시스템일수록 고장 확률이 증가함
+
+// 7. 안정성 및 생장 수렴 (Stability & Growth Convergence)
+Life_Support_System_Stability -> Environmental_Control_Stability : 생명유지 시스템 안정성이 환경 제어 안정성을 결정함
+Environmental_Control_Stability -> Crop_Stress : 환경 제어가 불안정할수록 작물 스트레스가 증가함
+Crop_Physiological_Stability -> Crop_Growth_Rate : 생리적 안정성이 높을수록 생장 효율이 증가함
+Crop_Stress -> Crop_Growth_Rate : 스트레스는 생장 속도를 저하시킴
+
+// 8. 수확 및 산출 (Harvest & Output)
+Photosynthesis_Rate -> Biomass_Accumulation : 광합성률은 바이오매스 축적을 결정함
+Crop_Growth_Rate -> Biomass_Accumulation : 생장 속도가 축적 생체량으로 이어짐
+Biomass_Accumulation -> Yield : 축적된 생체량이 최종 수확량으로 전환됨
+
+// 9. 최종 성과 (Final Outcomes)
+Yield -> Food_Self_Sufficiency : 생산량이 식량 자급 수준을 결정함
+Operational_Cost -> Economic_Sustainability : 운영비는 경제적 지속가능성에 직접 영향함
+Food_Self_Sufficiency -> Mission_Sustainability : 식량 자급이 장기 임무 유지 가능성을 좌우함
+System_Failure_Risk -> Mission_Sustainability : 시스템 고장은 임무 지속성을 저해함
+Economic_Sustainability -> Mission_Sustainability : 경제성이 확보되어야 장기 농업 운영이 가능함
+
+// 10. 장기 비전 (Long-term Vision)
+Mission_Sustainability -> Colony_Expansion_Feasibility : 임무 지속 가능성이 확장 정착 가능성을 결정함
+Colony_Expansion_Feasibility -> Long_Term_Space_Agriculture_Viability : 확장 가능성이 장기 우주농업 실현성을 규정함`;
+
+    const EXAMPLE_DOOLY = `// ── 아기공룡둘리 인물 관계도 ──
+
+// 둘리 중심 관계
+둘리 <-> 고길동 : 동거 관계 / 갈등과 정이 공존하는 보호자-피보호자 관계
+둘리 <-> 도우너 : 친구 / 모험과 장난을 함께하는 동료 관계
+둘리 <-> 또치 : 친구 / 호기심 기반의 협력 관계
+둘리 <-> 희동이 : 애착 관계 / 희동이가 둘리를 매우 따름
+둘리 <-> 둘리엄마 : 가족 관계 / 모성애와 그리움의 상징적 관계
+
+// 고길동 중심 관계
+고길동 <-> 희동이 : 부자 관계 / 보호와 양육 중심 관계
+고길동 <-> 고길동아내 : 부부 관계 / 가정 유지의 협력 관계
+고길동 <-> 도우너 : 동거로 인한 보호자-피보호자 관계
+고길동 <-> 또치 : 동거로 인한 생활 공동체 관계
+
+// 친구들 간 관계
+도우너 <-> 또치 : 친구 관계 / 외계 출신 동료로서의 연대 관계
+도우너 <-> 희동이 : 친근한 형 같은 관계 / 장난과 돌봄 혼합 관계
+또치 <-> 희동이 : 누나 같은 관계 / 희동이를 챙기는 관계
+
+// 둘리엄마 관계
+둘리엄마 <-> 둘리 : 가족 관계 / 이야기의 정서적 동기 형성
+둘리엄마 <-> 도우너 : 간접적 보호 대상 관계 / 둘리 친구에 대한 확장된 가족성
+둘리엄마 <-> 또치 : 간접적 보호 대상 관계 / 또치 역시 둘리와 함께 묶인 가족적 범주
+
+// 마이콜 관계
+마이콜 <-> 둘리 : 친구 / 음악과 유희 중심 관계
+마이콜 <-> 도우너 : 친구 / 문화적 놀이를 공유하는 관계
+마이콜 <-> 또치 : 친구 / 집단 유희 관계
+
+// 고길동 vs 마이콜
+고길동 <-> 마이콜 : 갈등적 이웃 관계 / 소음과 사건의 원인 제공자 인식
+
+// 고길동아내 관계
+고길동아내 <-> 둘리 : 보호적 수용 관계 / 길동보다 높은 수용성
+고길동아내 <-> 도우너 : 보호적 동거 수용 관계
+고길동아내 <-> 또치 : 보호적 동거 수용 관계
+
+// 희동이 놀이 관계
+희동이 <-> 도우너 : 놀이 관계 / 긍정적 상호작용 중심
+희동이 <-> 또치 : 놀이 및 돌봄 관계`;
+
+    const EXAMPLE_FERTILIZER = `// ── 비료 양분 관계도 ──
+
+// 질소(N) 중심 관계
+질소(N) <-> 인(P) : 초기 생육과 뿌리 발달이 함께 촉진되는 상승작용
+질소(N) <-> 칼륨(K) : 생장과 수량 형성의 균형을 높이는 상승작용
+질소(N) -> 칼슘(Ca) : 질소 과잉 시 칼슘 흡수 저해가 발생함
+질소(N) -> 마그네슘(Mg) : 질소 과다 공급 시 Mg 결핍 유발 가능
+
+// 인(P) 중심 관계
+인(P) <-> 질소(N) : 단백질 합성과 생장 효율 상승작용
+인(P) -> 아연(Zn) : 인 과잉 시 아연 흡수 길항작용 발생
+인(P) -> 철(Fe) : 인 농도 증가 시 철 가용성이 감소함
+인(P) -> 망간(Mn) : 인 과다 환경에서 미량요소 흡수 억제
+
+// 칼륨(K) 중심 관계
+칼륨(K) <-> 질소(N) : 양분 이용 효율과 생산성 상승작용
+칼륨(K) -> 마그네슘(Mg) : 양이온 경쟁으로 Mg 흡수 길항
+칼륨(K) -> 칼슘(Ca) : 고칼륨 조건에서 Ca 흡수 경쟁 발생
+칼륨(K) <-> 규소(Si) : 내재해성 및 조직 강도 상승작용
+
+// 칼슘(Ca) 중심 관계
+칼슘(Ca) <-> 붕소(B) : 세포벽 형성과 생장점 안정성 상승작용
+칼슘(Ca) -> 마그네슘(Mg) : 과잉 Ca 공급 시 Mg 흡수 저해
+칼슘(Ca) -> 나트륨(Na) : 나트륨 집적 환경에서 Ca 균형 교란 영향
+
+// 마그네슘(Mg) 중심 관계
+마그네슘(Mg) <-> 질소(N) : 엽록소 형성과 광합성 효율 상승작용
+마그네슘(Mg) -> 칼륨(K) : K 과잉 시 Mg 결핍 유도되는 길항관계
+마그네슘(Mg) <-> 황(S) : 효소 활성 및 대사 촉진 상승작용
+
+// 황(S) 중심 관계
+황(S) <-> 질소(N) : 단백질 합성 및 질소 이용률 상승작용
+황(S) <-> 미량요소(Fe·Zn·Mn) : 가용성 증가로 흡수 상승작용
+
+// 철(Fe) 중심 관계
+철(Fe) <-> 망간(Mn) : 효소 반응 및 광합성 보조 상승작용
+철(Fe) -> 인(P) : 인 축적 환경에서 철 불용화 경향 발생
+철(Fe) <-> 유기물 : 킬레이트 효과로 흡수율 상승
+
+// 아연(Zn) 중심 관계
+아연(Zn) <-> 질소(N) : 생장 호르몬 합성과 생육 촉진 상승작용
+아연(Zn) -> 인(P) : 인 과잉 토양에서 Zn 결핍 유도되는 길항관계
+
+// 붕소(B) 및 규소(Si) 관계
+붕소(B) <-> 칼슘(Ca) : 생식생장과 세포 분열 상승작용
+붕소(B) -> 칼륨(K) : 고칼륨 환경에서 붕소 이용 효율 감소
+규소(Si) <-> 칼륨(K) : 내도복성과 스트레스 저항성 상승작용
+규소(Si) <-> 칼슘(Ca) : 조직 강도와 구조 안정성 상승작용
+
+// 유기물 중심 관계
+유기물 <-> 질소(N) : 완효성 질소 공급 및 이용 효율 상승작용
+유기물 <-> 인(P) : 인 고정 완화로 가용성 증가
+유기물 <-> 미량요소(Fe·Zn·Mn) : 킬레이트 작용으로 흡수 촉진
+
+// 토양 환경 요인
+토양pH -> 인(P) : pH 변화가 인 가용성을 직접 좌우함
+토양pH -> 철(Fe) : 고 pH에서 철 결핍 발생 영향
+염류집적(EC) -> 질소(N) : 고염 환경에서 질소 흡수 저해
+염류집적(EC) -> 칼륨(K) : 삼투 스트레스로 양분 흡수 전반 억제`;
+
+    // ── Word-wrap helper for edge labels ──
+    function wrapLabel(text, maxChars) {
+      if (!text || text.length <= maxChars) return text;
+      const words = text.split(/\s+/);
+      let lines = [], cur = '';
+      for (const w of words) {
+        if (cur && (cur.length + 1 + w.length) > maxChars) {
+          lines.push(cur);
+          cur = w;
+        } else {
+          cur = cur ? cur + ' ' + w : w;
+        }
+      }
+      if (cur) lines.push(cur);
+      // If a single word exceeds maxChars, force-break it
+      return lines.map(l => {
+        if (l.length <= maxChars) return l;
+        const parts = [];
+        for (let i = 0; i < l.length; i += maxChars) parts.push(l.slice(i, i + maxChars));
+        return parts.join('\n');
+      }).join('\n');
+    }
 
     // ── Parser ──
     function parseEdges(text) {
@@ -672,13 +934,27 @@ Farm_Profit -> Reinvestment_Capacity`;
       for (let line of lines) {
         line = line.trim();
         if (!line || line.startsWith('//') || line.startsWith('#')) continue;
-        const tokens = line.split(/\s+/);
+        // Separate description after last " : " that is not part of an arrow
+        let desc = '';
+        const descMatch = line.match(/^(.+?)\s+:\s+(.+)$/);
+        let mainPart = line;
+        if (descMatch) {
+          // Verify the part before ":" contains at least one arrow
+          const candidate = descMatch[1];
+          if (/->|<->/.test(candidate)) {
+            mainPart = candidate;
+            desc = descMatch[2].trim();
+          }
+        }
+        const tokens = mainPart.split(/\s+/);
         let i = 0;
         while (i < tokens.length) {
           const from = tokens[i], op = tokens[i+1], to = tokens[i+2];
           if (!from || !op || !to) break;
           if (op === '->' || op === '<->') {
-            edges.push({ from, to, arrows: op === '<->' ? 'to, from' : 'to' });
+            // Only the last edge in a chain gets the description
+            const isLast = !tokens[i+3] || (tokens[i+3] !== '->' && tokens[i+3] !== '<->');
+            edges.push({ from, to, arrows: op === '<->' ? 'to, from' : 'to', desc: isLast ? desc : '' });
             i += 2;
           } else { i++; }
         }
@@ -808,7 +1084,7 @@ Farm_Profit -> Reinvestment_Capacity`;
       const edges = edgeList.map((e, i) => {
         const dimmed = hasSelection && !activeEdges.has(i);
         const active = hasSelection && activeEdges.has(i);
-        return {
+        const edgeObj = {
           id: `e${i}`, from: e.from, to: e.to, arrows: e.arrows,
           color: {
             color: dimmed ? c.edgeDim : c.edgeColor,
@@ -818,9 +1094,25 @@ Farm_Profit -> Reinvestment_Capacity`;
           width: active ? 2.5 : (dimmed ? 0.5 : 1.2),
           smooth: edgeStyle === 'curved' ? { type: 'continuous' } : false,
         };
+        if (e.desc) {
+          edgeObj.title = e.desc; // always show on hover
+          if (showEdgeLabels) {
+            edgeObj.label = wrapLabel(e.desc, EDGE_LABEL_MAX_CHARS);
+            edgeObj.font = { size: 11, color: dimmed ? c.edgeDim : c.edgeColor, strokeWidth: 3, strokeColor: c.graphBg, align: 'top', multi: false };
+          }
+        }
+        return edgeObj;
       });
 
       statsEl.textContent = `${nodes.length} nodes · ${edges.length} edges`;
+
+      // Show/hide idle quote
+      const idleQuoteEl = document.getElementById('idleQuote');
+      if (nodes.length === 0) {
+        idleQuoteEl.classList.remove('hidden');
+      } else {
+        idleQuoteEl.classList.add('hidden');
+      }
 
       const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
       const smoothOpt = edgeStyle === 'curved' ? { type: 'continuous' } : false;
@@ -930,6 +1222,18 @@ Farm_Profit -> Reinvestment_Capacity`;
       if (network) network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } });
     }
 
+    function zoomIn() {
+      if (!network) return;
+      const scale = network.getScale();
+      network.moveTo({ scale: scale * 1.3, animation: { duration: 300, easingFunction: 'easeInOutQuad' } });
+    }
+
+    function zoomOut() {
+      if (!network) return;
+      const scale = network.getScale();
+      network.moveTo({ scale: scale / 1.3, animation: { duration: 300, easingFunction: 'easeInOutQuad' } });
+    }
+
     function resetAll() {
       editorEl.value = '';
       selectedNodeId = null;
@@ -939,6 +1243,9 @@ Farm_Profit -> Reinvestment_Capacity`;
       layoutMode = 'free';
       nodeSizing = 'uniform';
       clusterByGroup = false;
+      showEdgeLabels = true;
+      document.getElementById('edgeLabelToggle').classList.add('on');
+      document.getElementById('edgeLabelLabel').textContent = 'Labels ✓';
       highlightGroups = [
         { name: 'Outcome', color: '#ff2d55', csv: '' },
         { name: 'Key',     color: '#00d4ff', csv: '' },
@@ -962,13 +1269,13 @@ Farm_Profit -> Reinvestment_Capacity`;
       toast('Reset complete');
     }
 
-    // ── Sample dropdown toggle ──
-    function toggleSampleDropdown() { document.getElementById('sampleMenu').classList.toggle('show'); }
+    // ── Example dropdown toggle ──
+    function toggleExampleDropdown() { document.getElementById('exampleMenu').classList.toggle('show'); }
 
-    function loadSample(type) {
-      document.getElementById('sampleMenu').classList.remove('show');
+    function loadExample(type) {
+      document.getElementById('exampleMenu').classList.remove('show');
       if (type === 'starwars') {
-        editorEl.value = SAMPLE_STARWARS;
+        editorEl.value = EXAMPLE_STARWARS;
         highlightGroups = [
           { name: 'Skywalker',   color: '#00d4ff', csv: 'Anakin_Skywalker, Luke_Skywalker, Leia_Organa, Shmi_Skywalker' },
           { name: 'Dark Side',   color: '#ff2d55', csv: 'Sheev_Palpatine, Darth_Vader' },
@@ -978,9 +1285,9 @@ Farm_Profit -> Reinvestment_Capacity`;
         // Reset to free layout for Star Wars
         layoutMode = 'free';
         document.getElementById('layoutBtn').textContent = LAYOUT_LABELS[layoutMode];
-        toast('Star Wars Sample loaded!');
+        toast('Star Wars example loaded!');
       } else if (type === 'hanwoo') {
-        editorEl.value = SAMPLE_HANWOO;
+        editorEl.value = EXAMPLE_HANWOO;
         highlightGroups = [
           { name: '외부환경',    color: '#00d4ff', csv: 'Regional_Policy, Climate_Condition, Feed_Crop_Yield, Market_Price' },
           { name: '농장관리',    color: '#39ff14', csv: 'Farm_Management, Feed_Quality, Housing_Environment, Vaccination_Schedule' },
@@ -994,7 +1301,51 @@ Farm_Profit -> Reinvestment_Capacity`;
         nodeSizing = 'degree';
         document.getElementById('sizingToggle').classList.add('on');
         document.getElementById('sizingLabel').textContent = 'Degree';
-        toast('한우 수익성 DAG loaded!');
+        toast('한우 수익성 loaded!');
+      } else if (type === 'astrobotany') {
+        editorEl.value = EXAMPLE_ASTROBOTANY;
+        highlightGroups = [
+          { name: '환경조건',   color: '#00d4ff', csv: 'Environment_Type, Gravity_Level, Radiation_Level, Atmospheric_Pressure, Temperature_Extremes, Solar_Irradiance, Water_Availability, Soil_Availability, Dust_Storm_Frequency' },
+          { name: '인프라',     color: '#ff9500', csv: 'Greenhouse_Sealing_Requirement, Thermal_Control_Demand, Irrigation_System_Need, Substrate_Processing_Need, Infrastructure_Complexity, Infrastructure_Mass, Shielding_System_Need, Launch_and_Deployment_Cost' },
+          { name: '에너지',     color: '#ffcc00', csv: 'Solar_Panel_Output, Energy_Availability, Energy_Demand, Artificial_Lighting, Operational_Cost' },
+          { name: '식물생리',   color: '#39ff14', csv: 'Root_Growth_Pattern, Photosynthesis_Potential, Photosynthesis_Rate, Water_Recycling_System, Water_Use_Efficiency, Plant_Water_Status, Nutrient_Delivery_Control, Nutrient_Uptake, Crop_Physiological_Stability, Crop_Growth_Rate, Crop_Stress, Biomass_Accumulation' },
+          { name: '최종성과',   color: '#ff2d55', csv: 'Yield, Food_Self_Sufficiency, Economic_Sustainability, Mission_Sustainability, System_Failure_Risk, Life_Support_System_Stability, Environmental_Control_Stability, Colony_Expansion_Feasibility, Long_Term_Space_Agriculture_Viability' },
+        ];
+        layoutMode = 'hierarchy-UD';
+        document.getElementById('layoutBtn').textContent = LAYOUT_LABELS[layoutMode];
+        nodeSizing = 'degree';
+        document.getElementById('sizingToggle').classList.add('on');
+        document.getElementById('sizingLabel').textContent = 'Degree';
+        toast('Astrobotany example loaded!');
+      } else if (type === 'dooly') {
+        editorEl.value = EXAMPLE_DOOLY;
+        highlightGroups = [
+          { name: '주인공',     color: '#00d4ff', csv: '둘리' },
+          { name: '고길동네',   color: '#ff2d55', csv: '고길동, 고길동아내, 희동이' },
+          { name: '친구들',     color: '#39ff14', csv: '도우너, 또치, 마이콜' },
+          { name: '가족',       color: '#ff9500', csv: '둘리엄마' },
+        ];
+        layoutMode = 'free';
+        document.getElementById('layoutBtn').textContent = LAYOUT_LABELS[layoutMode];
+        nodeSizing = 'degree';
+        document.getElementById('sizingToggle').classList.add('on');
+        document.getElementById('sizingLabel').textContent = 'Degree';
+        toast('아기공룡둘리 관계도 loaded!');
+      } else if (type === 'fertilizer') {
+        editorEl.value = EXAMPLE_FERTILIZER;
+        highlightGroups = [
+          { name: '다량원소',   color: '#00d4ff', csv: '질소(N), 인(P), 칼륨(K)' },
+          { name: '2차원소',    color: '#39ff14', csv: '칼슘(Ca), 마그네슘(Mg), 황(S)' },
+          { name: '미량원소',   color: '#ff9500', csv: '철(Fe), 아연(Zn), 망간(Mn), 붕소(B), 규소(Si), 미량요소(Fe·Zn·Mn)' },
+          { name: '토양환경',   color: '#ff2d55', csv: '토양pH, 염류집적(EC), 나트륨(Na)' },
+          { name: '유기물',     color: '#bf00ff', csv: '유기물' },
+        ];
+        layoutMode = 'free';
+        document.getElementById('layoutBtn').textContent = LAYOUT_LABELS[layoutMode];
+        nodeSizing = 'degree';
+        document.getElementById('sizingToggle').classList.add('on');
+        document.getElementById('sizingLabel').textContent = 'Degree';
+        toast('비료 양분 관계도 loaded!');
       }
       renderHighlightUI();
       selectedNodeId = null;
@@ -1064,12 +1415,12 @@ network.on('click',function(p){if(p.nodes.length){var n=p.nodes[0];network.selec
       toast('Rendering PNG...');
       if (network) network.stopSimulation();
       await new Promise(r => setTimeout(r, 300));
-      const canvas = await html2canvas(graphEl, { backgroundColor: getThemeColors().graphBg, scale: 2, useCORS: true, logging: false });
+      const canvas = await html2canvas(graphEl, { backgroundColor: null, scale: 3, useCORS: true, logging: false });
       const link = document.createElement('a');
       link.download = getExportFilename('png');
       link.href = canvas.toDataURL('image/png');
       link.click();
-      toast('PNG exported!');
+      toast('PNG exported (transparent)!');
     }
 
     function exportTXT() {
