@@ -1,4 +1,51 @@
 // article list
+.article-search {
+  margin-bottom: 2.4rem;
+  @include spoca-han;
+}
+.article-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1.2rem 1.6rem;
+  font-size: 1.6rem;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 12px;
+  outline: none;
+}
+.article-search-input:focus {
+  border-color: #67bdd5;
+}
+.search-hint {
+  margin-top: 0.8rem;
+  font-size: 1.3rem;
+  color: #888;
+}
+.search-result-count {
+  margin-bottom: 1.6rem;
+  font-size: 1.5rem;
+  color: #444;
+  @include spoca-han;
+}
+.search-no-result {
+  padding: 2rem 0;
+  font-size: 1.6rem;
+  color: #666;
+  @include spoca-han;
+}
+.search-snippet {
+  margin-top: 1rem;
+  font-size: 1.4rem;
+  line-height: 1.6;
+  color: #555;
+  word-break: break-word;
+}
+.search-snippet mark,
+.article-title mark {
+  background: #fff2a8;
+  color: inherit;
+  padding: 0 1px;
+}
+
 .article-card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

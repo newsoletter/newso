@@ -8,6 +8,7 @@ custom_css:
   - article
 custom_js:
   - app
+  - search
 ---
 
 <section class="newso-story newso-article-list">
@@ -16,8 +17,23 @@ custom_js:
       <p>지난 뉴소레터</p>
     </div>
 
+    <!-- search -->
+    <div class="article-search">
+      <input
+        type="search"
+        class="article-search-input js-article-search-input"
+        placeholder="제목·본문으로 검색해보세요"
+        aria-label="지난 뉴소레터 검색"
+        data-search-url="{{ '/search.json' | relative_url }}"
+      />
+      <p class="search-hint">전체 지난 뉴소레터의 제목과 본문에서 검색합니다.</p>
+    </div>
+
+    <!-- search-results -->
+    <div class="search-results js-search-results" style="display: none"></div>
+
     <!-- article-grid -->
-    <div class="article-card-grid">
+    <div class="article-card-grid js-paginated-list">
       {% for post in paginator.posts %}
       <a href="{{ site.baseurl }}{{ post.url }}">
         <div class="article-item">
@@ -31,7 +47,7 @@ custom_js:
 
   <!-- pagination   -->
 
-  <div class="content-wrapper">
+  <div class="content-wrapper js-pagination">
     {% if paginator.total_pages > 1 %}
     <div class="pagination">
       {% if paginator.previous_page %}
