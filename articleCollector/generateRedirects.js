@@ -27,5 +27,9 @@ sitemap: false
 ---
 `;
   fs.writeFileSync(path.join(destination, `${date}.html`), content);
+  fs.writeFileSync(
+    path.join(destination, `${date}-pretty.html`),
+    content.replace(`permalink: /${date}.html`, `permalink: /${date.replace(/-/g, "/")}/`)
+  );
 }
-console.log(`Generated ${byDate.size} date redirects.`);
+console.log(`Generated ${byDate.size * 2} redirects for ${byDate.size} dates.`);
