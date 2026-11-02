@@ -63,6 +63,10 @@ npm run crawl-all
 같은 날짜의 글이 여러 개라면 대상을 임의로 선택하지 않고 오류를 표시합니다.
 GitHub Actions의 예약 실행과 수동 실행에서도 크롤링과 함께 생성·커밋됩니다.
 
+GitHub Actions에서는 크롤링 후 `npm run sitemap`으로 `sitemap.xml`도 갱신합니다.
+기존 항목은 유지하고 `/2026/10/29/3671258.html` 형식의 게시글 주소만 중복 없이 추가합니다.
+로컬에서도 `npm run sitemap`으로 실행할 수 있습니다.
+
 ## 개발할 때 실행할 것
 
 ```shell

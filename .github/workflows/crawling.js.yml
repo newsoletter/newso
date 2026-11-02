@@ -26,6 +26,8 @@ jobs:
           cache: "npm"
       - run: npm ci
       - run: npm run crawl
+      - name: Update sitemap with post URLs
+        run: npm run sitemap
       - uses: EndBug/add-and-commit@v9 # You can change this to use a specific version.
         with:
           author_name: "Newso"

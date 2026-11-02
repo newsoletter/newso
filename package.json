@@ -27,7 +27,8 @@
     "gulp:watch": "npx gulp watch",
     "crawl": "node ./articleCollector/main.js && npm run redirects",
     "crawl-all": "node ./articleCollector/saveAllPosts.js && npm run redirects",
-    "redirects": "node ./articleCollector/generateRedirects.js"
+    "redirects": "node ./articleCollector/generateRedirects.js",
+    "sitemap": "node ./articleCollector/updateSitemap.js"
   },
   "repository": {
     "type": "git",
