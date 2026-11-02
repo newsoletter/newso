@@ -84,7 +84,7 @@ exports.saveRecentArticle = async function () {
   const recentArticleInfo = archive[0];
 
   try {
-    saveArticleHTML(recentArticleInfo);
+    await saveArticleHTML(recentArticleInfo);
   } catch (error) {
     console.error("newso: 아티클을 저장하지 못했습니다.");
   }

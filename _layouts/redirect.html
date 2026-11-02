@@ -1,0 +1,16 @@
+{%- capture destination -%}{% post_url page.redirect_post %}{%- endcapture -%}
+{%- assign destination = destination | relative_url -%}
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
+    <meta http-equiv="refresh" content="0; url={{ destination | escape }}">
+    <link rel="canonical" href="{{ destination | absolute_url | escape }}">
+    <title>뉴소레터로 이동합니다</title>
+    <script>window.location.replace({{ destination | jsonify }} + window.location.search + window.location.hash);</script>
+  </head>
+  <body>
+    <p><a href="{{ destination | escape }}">뉴소레터로 이동하기</a></p>
+  </body>
+</html>
