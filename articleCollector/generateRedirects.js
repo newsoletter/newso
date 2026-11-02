@@ -25,6 +25,7 @@ permalink: /${date}.html
 redirect_post: ${file.replace(/\.html$/, "")}
 sitemap: false
 ---
+{% post_url ${file.replace(/\.html$/, "")} %}
 `;
   fs.writeFileSync(path.join(destination, `${date}.html`), content);
   fs.writeFileSync(

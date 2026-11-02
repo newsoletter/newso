@@ -1,5 +1,4 @@
-{%- capture destination -%}{% post_url page.redirect_post %}{%- endcapture -%}
-{%- assign destination = destination | relative_url -%}
+{%- assign destination = content | strip | relative_url -%}
 <!DOCTYPE html>
 <html lang="ko">
   <head>
